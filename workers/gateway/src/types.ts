@@ -14,5 +14,5 @@ export var COMPONENTS = [
   { id: "tailscale", name: "Tailscale", desc: "VPN mesh network." },
   { id: "links", name: "Links Hub", desc: "Apps, tools, skills directory." }
 ];
-export var VERSION = "18.0.2";
+export var VERSION = "18.0.3";
 

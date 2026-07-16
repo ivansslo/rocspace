@@ -104,7 +104,7 @@
 | Component | Status | Details |
 |---|---|---|
 | WVC Container | ✅ | linkease/webvirtcloud, port 8090/6080 |
-| WVC Admin Login | ✅ | admin / rocspace2026 |
+| WVC Admin Login | ✅ | admin / <REDACTED> |
 | Firebase Bridge Page | ✅ | Served from Worker (vm.roadfx.biz.id) |
 | Firebase SDK | ✅ | firebase-app.js, firebase-auth.js loaded |
 | Google Auth Provider | ✅ | GoogleAuthProvider configured |

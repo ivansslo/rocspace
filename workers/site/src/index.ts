@@ -1,9 +1,9 @@
 // ═══════════════════════════════════════════════════════════
-//  roc-site — Unified Router v18.0.1
+//  roc-site — Unified Router v18.0.3
 //  16 domains → roc-site, WebVirtCloud + Firebase (yttriferous-magpie-16ppv)
 // ═══════════════════════════════════════════════════════════
 
-import { ENDPOINTS, DOMAIN_MAP, corsHeaders, jsonResponse, htmlResponse } from '@rocspace/shared';
+import { ENDPOINTS, DOMAIN_MAP, AI_STUDIO, corsHeaders, jsonResponse, htmlResponse } from '@rocspace/shared';
 import { connect } from 'cloudflare:sockets';
 
 const GATEWAY = ENDPOINTS.GATEWAY;
@@ -268,7 +268,7 @@ iframe{width:100%;height:100%;border:none}
     <iframe id="wvc-frame" src="" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"></iframe>
     <div class="status-bar">
       <span id="conn-status">WebVirtCloud: Waiting for auth...</span>
-      <span>RocSpace v18.0.1 · Firebase yttriferous-magpie-16ppv</span>
+      <span>RocSpace v18.0.3 · Firebase yttriferous-magpie-16ppv</span>
     </div>
   </div>
 </div>
@@ -276,6 +276,9 @@ iframe{width:100%;height:100%;border:none}
 import{initializeApp}from'https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js';
 import{getAuth,signInWithPopup,GoogleAuthProvider,onAuthStateChanged,signOut}from'https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js';
 
+// Firebase web config below is the PUBLIC client config by design
+// (identitas client yttriferous; keamanan dijaga Firebase Auth + Security Rules).
+// Semua kredensial rahasia → CF secret bindings, tidak pernah di source.
 const cfg={apiKey:"AIzaSyBLpdsheG9pYmtYqGgo0af0_5Du_fDvJYk",authDomain:"yttriferous-magpie-16ppv.firebaseapp.com",projectId:"yttriferous-magpie-16ppv",storageBucket:"yttriferous-magpie-16ppv.firebasestorage.app",messagingSenderId:"819208434965",appId:"1:819208434965:web:35c60025a91bd089c3251c"};
 const app=initializeApp(cfg);const auth=getAuth(app);const prov=new GoogleAuthProvider();
 const WVC="http://161.118.253.28/vm/wvc/";
@@ -326,8 +329,8 @@ nav{text-align:center;padding:16px;background:#0f0f17;border-bottom:1px solid #1
 .services{max-width:1200px;margin:40px auto;padding:0 20px}.domain-grid{max-width:1200px;margin:40px auto;padding:0 20px}.domain-card{display:inline-block;padding:10px 18px;background:#12121a;border:1px solid #1e1e2e;border-radius:10px;margin:4px;color:#60a5fa;text-decoration:none;font-size:0.85em;font-family:monospace;transition:0.2s}.domain-card:hover{border-color:#60a5fa;background:#1a1a2e}footer{text-align:center;padding:40px;color:#475569;font-size:0.8em}
 </style></head><body>
 <nav><a href="/">🏠 Dashboard</a><a href="/chat-live">💬 Chat Live</a><a href="/chat">🤖 Quick Chat</a><a href="/status">📊 Status</a><a href="/vm">🖥️ VM Console</a></nav>
-<div class="hero"><h1>RocSpace</h1><p>AI Infrastructure · Unified Router · v17.3.0</p>
-<span class="tag">🤖 16 AI Models</span><span class="tag">📡 Solace PubSub+</span><span class="tag">☁️ CF Workers</span><span class="tag">🧠 Cloud Run</span><span class="tag">🖥️ Oracle VM</span><span class="tag">🔥 Firebase</span><span class="tag">🛡️ WebVirtCloud</span></div>
+<div class="hero"><h1>RocSpace</h1><p>AI Infrastructure · Unified Router · v18.0.3</p>
+<span class="tag">🤖 16 AI Models</span><span class="tag">📡 Solace PubSub+</span><span class="tag">☁️ CF Workers</span><span class="tag">🧠 Cloud Run</span><span class="tag">🖥️ Oracle VM</span><span class="tag">🔥 Firebase</span><span class="tag">🛡️ WebVirtCloud</span><span class="tag">🎨 AI Studio (rocspace.ai.studio)</span></div>
 <div class="grid">
 <a href="/vm" class="card"><h2>🖥️ VM Console</h2><div class="stat">KVM</div><div class="label">WebVirtCloud + Firebase</div><p>VM management · Firebase Auth · noVNC</p></a>
 <a href="/chat-live" class="card"><h2>🔴 Chat Live</h2><div class="stat">16</div><div class="label">AI Models</div><p>Clerk auth · 8 social logins · 3 modes</p></a>
@@ -335,20 +338,22 @@ nav{text-align:center;padding:16px;background:#0f0f17;border-bottom:1px solid #1
 <a href="/monitor" class="card"><h2>📊 Monitor</h2><div class="stat">99%</div><div class="label">Uptime</div><p>Uptime Kuma · Alerts · Status Pages</p></a>
 <a href="https://ai.roadfx.biz.id" class="card"><h2>🧠 AI Engine</h2><div class="stat">5</div><div class="label">Providers</div><p>Groq · OpenRouter · Google · OpenAI</p></a>
 <a href="https://app.roadfx.biz.id" class="card"><h2>📱 Apps Hub</h2><div class="stat">16</div><div class="label">Domains</div><p>Apps · Tools · Skills</p></a>
+<a href="${AI_STUDIO.APP}" class="card"><h2>🎨 AI Studio</h2><div class="stat">🚀</div><div class="label">rocspace.ai.studio 🔒</div><p>Applet privat Google AI Studio · Gemini · AIS-DEV (login Google pemilik)</p></a>
 </div>
 <div class="services"><h2 style="margin-bottom:16px;font-size:1.3em">🔄 Infrastructure</h2>
 <div class="svc-row"><div><div class="svc-name">WebVirtCloud + Firebase</div><div class="svc-detail">Oracle VM · yttriferous-magpie-16ppv · KVM</div></div><span class="svc-status on">● Running</span></div>
-<div class="svc-row"><div><div class="svc-name">Gateway (hermes-cloudflare)</div><div class="svc-detail">v17.1.1 · 16 models · 5 providers</div></div><span class="svc-status on">● Active</span></div>
+<div class="svc-row"><div><div class="svc-name">Gateway (hermes-cloudflare)</div><div class="svc-detail">v18.0.3 · 16 models · 5 providers</div></div><span class="svc-status on">● Active</span></div>
 <div class="svc-row"><div><div class="svc-name">CloudRun (ai-vitality)</div><div class="svc-detail">us-west1 · billing issue</div></div><span class="svc-status off">● Down</span></div>
 <div class="svc-row"><div><div class="svc-name">AIS-DEV (new candidate)</div><div class="svc-detail">asia-east1 · AI Studio Applet (fallback)</div></div><span class="svc-status warn">● Available</span></div>
-<div class="svc-row"><div><div class="svc-name">CF Workers (roc-site)</div><div class="svc-detail">v17.3.0 · 16 domains</div></div><span class="svc-status on">● Active</span></div>
+<div class="svc-row"><div><div class="svc-name">AI Studio Applet</div><div class="svc-detail">alias: rocspace.ai.studio 🔒 · privat · aistudio.google.com</div></div><span class="svc-status on">● Integrated</span></div>
+<div class="svc-row"><div><div class="svc-name">CF Workers (roc-site)</div><div class="svc-detail">v18.0.3 · 16 domains</div></div><span class="svc-status on">● Active</span></div>
 <div class="svc-row"><div><div class="svc-name">Oracle Cloud VM</div><div class="svc-detail">Singapore · 1CPU/16GB · Docker</div></div><span class="svc-status on">● Running</span></div>
 <div class="svc-row"><div><div class="svc-name">Clerk Auth</div><div class="svc-detail">25 origins · 8 social logins</div></div><span class="svc-status on">● Active</span></div>
 <div class="svc-row"><div><div class="svc-name">Firebase Auth</div><div class="svc-detail">yttriferous-magpie-16ppv · Google Sign-in</div></div><span class="svc-status on">● Active</span></div>
 <div class="svc-row"><div><div class="svc-name">Solace PubSub+</div><div class="svc-detail">Singapore · 5 queues</div></div><span class="svc-status on">● Connected</span></div>
 </div>
 <div class="domain-grid"><h2 style="margin-bottom:16px;font-size:1.3em">🌐 Domains (All → roc-site)</h2>${domains}</div>
-<footer>RocSpace by RoadFX AI · 2026 · v17.3.0 · <a href="https://github.com/ivansslo/rocspace" style="color:#60a5fa">GitHub</a></footer>
+<footer>RocSpace by RoadFX AI · 2026 · v18.0.3 · <a href="https://github.com/ivansslo/rocspace" style="color:#60a5fa">GitHub</a></footer>
 </body></html>`;
 }
 

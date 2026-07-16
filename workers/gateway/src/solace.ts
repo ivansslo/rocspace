@@ -1,5 +1,12 @@
 // workers/gateway/src/solace.ts
 import { json } from './utils';
+
+// v18.0.3 — identitas broker TIDAK lagi di-hardcode:
+//   broker/serviceId diturunkan dari hostname binding SOLACE_URL/SOLACE_SEMP_URL,
+//   nama msgVpn dibaca dari binding opsional SOLACE_VPN (fallback "default").
+//   Kredensial (user/pass/token) memang sudah 100% dari secret bindings.
+const solaceHost = (u) => { try { return u ? new URL(u).hostname : ""; } catch { return ""; } };
+const solaceVpn  = (env) => env.SOLACE_VPN || "default";
 export function solaceEmit(env, topic, data) {
   if (!env.SOLACE_URL) return;
   fetch(`${env.SOLACE_URL}/topic/${topic}`, {
@@ -30,9 +37,8 @@ export async function solaceStatus(env) {
     return json({
       status: r.status === 200 ? "connected" : "error",
       httpCode: r.status,
-      broker: "mr-connection-mwc1f9igml1.messaging.solace.cloud",
-      vpn: "roclace-cluster",
-      serviceId: "p37j7q6aggq",
+      broker: solaceHost(env.SOLACE_SEMP_URL) || solaceHost(env.SOLACE_URL) || "unknown",
+      vpn: solaceVpn(env),
       ts: (/* @__PURE__ */ new Date()).toISOString()
     });
   } catch (e) {
@@ -44,7 +50,7 @@ export async function solaceQueues(env) {
     return json({ error: "Solace SEMP credentials not configured" }, 503);
   }
   try {
-    const sempUrl = env.SOLACE_SEMP_URL.replace(/\/$/, "") + "/SEMP/v2/monitor/msgVpns/roclace-cluster/queues";
+    const sempUrl = env.SOLACE_SEMP_URL.replace(/\/$/, "") + "/SEMP/v2/monitor/msgVpns/" + encodeURIComponent(solaceVpn(env)) + "/queues";
     const r = await fetch(sempUrl, {
       headers: { "Authorization": "Basic " + btoa(`${env.SOLACE_VIEW_USER}:${env.SOLACE_VIEW_PASS}`) }
     });

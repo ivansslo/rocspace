@@ -42,8 +42,17 @@ export const ENDPOINTS = {
   CLOUDRUN: 'https://ai-vitality-819208434965.us-west1.run.app', // DOWN (billing OR_BACR2_44) — routes prefer GATEWAY
   AIS_DEV: 'https://ais-dev-jqizmthqeu2hdc4e3pgh63-70765440683.asia-east1.run.app', // Google AI Studio Applet (asia-east1)
   CLERK_DOMAIN: 'awake-chicken-95.clerk.accounts.dev',
-  SOLACE_BROKER: 'mr-connection-mwc1f9igml1.messaging.solace.cloud',
-  SOLACE_VPN: 'roclace-cluster',
+} as const;
+
+// ─── AI Studio (integrasi applet privat Google AI Studio) ──
+// Alias "rocspace.ai.studio"/"webvirtcloud.ai.studio" = label integrasi.
+// Subdomain *.ai.studio milik Google & tidak bisa di-klaim user — link resmi
+// applet (private, redirect login Google pemilik) adalah URL di bawah ini.
+export const AI_STUDIO = {
+  APP: 'https://ai.studio/apps/90047957-bcb6-4808-8e03-3df0c091f88f',
+  HOME: 'https://aistudio.google.com',
+  ALIAS: 'rocspace.ai.studio',
+  ALIAS_VM: 'webvirtcloud.ai.studio',
 } as const;
 
 // ─── Domain Map ──────────────────────────────────────────
@@ -74,13 +83,9 @@ export const DOMAIN_MAP: DomainMapping[] = [
 ];
 
 // ─── Cloudflare Config ───────────────────────────────────
-
-export const CF_ACCOUNT_ID = '37c44b4d3f192a627d20e46bdf910e79';
-export const CF_ZONE_ID = '8df888939e609421ac15e6fdade11ad4'; // roadfx.biz.id
-
-// ─── Clerk Config ────────────────────────────────────────
-
-export const CLERK_PK = 'pk_test_YXdha2UtY2hpY2tlbi05NS5jbGVyay5hY2NvdW50cy5kZXYk';
+// DIBERSIHKAN (v18.0.3): CF_ACCOUNT_ID / CF_ZONE_ID / CLERK_PK tidak lagi
+// di-hardcode di source — skrip membaca dari env (lihat .env.example),
+// worker memakai secret bindings (wrangler secret). Jangan commit nilai nyata.
 
 // ─── Utility Functions ───────────────────────────────────
 

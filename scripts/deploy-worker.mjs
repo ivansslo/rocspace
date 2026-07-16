@@ -9,7 +9,11 @@ import { join } from 'path';
 import { execSync } from 'child_process';
 
 const CFAT = process.env.CF_API_TOKEN || '';
-const ACCOUNT_ID = '37c44b4d3f192a627d20e46bdf910e79';
+const ACCOUNT_ID = process.env.CF_ACCOUNT_ID;
+if (!ACCOUNT_ID) {
+  console.error('❌ CF_ACCOUNT_ID belum di-set (export dari SECRETS-MASTER / lihat .env.example)');
+  process.exit(1);
+}
 
 // Worker name → CF script name mapping
 const WORKER_MAP = {

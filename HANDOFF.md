@@ -105,6 +105,7 @@ rocspace/
 | SOLACE_USER / SOLACE_PASS | Solace auth |
 | SOLACE_API_TOKEN | Solace API token |
 | SOLACE_SEMP_URL | Solace SEMP endpoint |
+| SOLACE_VPN | Nama msgVpn untuk path SEMP (ditambah v18.0.3 — total 31 secret bindings) |
 | SOLACE_VIEW_USER / SOLACE_VIEW_PASS | Solace monitor auth |
 | FIREBASE_CONFIG | Firebase config JSON (yttriferous-magpie-16ppv) |
 | GATEWAY_TOKEN | roc-site→Gateway auto-auth |
@@ -320,7 +321,7 @@ All commands continue to use the same TOKEN auth flow.
 ### Bug 3: Wrangler Deploy Wipes Secrets
 - **Issue:** `npx wrangler deploy` clears all secret_text bindings that aren't in wrangler.toml
 - **Fix:** Re-set secrets via `wrangler secret put` after each deploy
-- **GATEWAY_TOKEN** on roc-site and **TOKEN** on hermes-cloudflare both re-set to `rocspace2026`
+- **GATEWAY_TOKEN** on roc-site and **TOKEN** on hermes-cloudflare both re-set to `<REDACTED>`
 
 ### Deploy Method (Updated)
 ```bash
@@ -329,5 +330,5 @@ cd workers/site
 CLOUDFLARE_API_TOKEN=cfat_TOKEN CLOUDFLARE_ACCOUNT_ID=37c44b4d3f192a627d20e46bdf910e79 npx wrangler deploy
 
 # Re-set secrets after deploy (wrangler wipes them!)
-echo "rocspace2026" | CLOUDFLARE_API_TOKEN=cfat_TOKEN CLOUDFLARE_ACCOUNT_ID=37c44b4d3f192a627d20e46bdf910e79 npx wrangler secret put GATEWAY_TOKEN --name roc-site
+echo "<REDACTED>" | CLOUDFLARE_API_TOKEN=cfat_TOKEN CLOUDFLARE_ACCOUNT_ID=37c44b4d3f192a627d20e46bdf910e79 npx wrangler secret put GATEWAY_TOKEN --name roc-site
 ```
