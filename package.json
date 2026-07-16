@@ -26,10 +26,10 @@
     "deploy:all": "npm run build && npm run deploy"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250620.0",
+    "esbuild": "^0.25.12",
     "turbo": "^2.5.0",
     "typescript": "^5.8.0",
-    "esbuild": "^0.25.0",
-    "@cloudflare/workers-types": "^4.20250620.0",
     "wrangler": "^4.0.0"
   },
   "packageManager": "npm@11.0.0",

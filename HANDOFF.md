@@ -302,3 +302,32 @@ curl -s -o /dev/null -w "%{http_code}" https://roadfx.biz.id/
 
 All commands continue to use the same TOKEN auth flow.
 
+
+---
+
+## 🚨 v18.0 Bug Fixes Applied (2026-07-16)
+
+### Bug 1: Circular Loop (CRITICAL)
+- **v18.0 changed** `ENDPOINTS.GATEWAY` from `certveis.workers.dev` to `gateway.roadfx.biz.id`
+- **Result:** roc-site → gateway.roadfx.biz.id → CF routes to roc-site → infinity → **522 timeout**
+- **Fix:** Reverted to `https://hermes-cloudflare.certveis.workers.dev` (internal endpoint)
+- **Lesson:** roc-site CANNOT proxy to `gateway.roadfx.biz.id` because that domain maps to roc-site itself!
+
+### Bug 2: Firebase Project Regression
+- **v18.0 changed** Firebase from `yttriferous-magpie-16ppv` back to `rofai-agent`
+- **Fix:** All Firebase references in site/src/index.ts restored to `yttriferous-magpie-16ppv`
+
+### Bug 3: Wrangler Deploy Wipes Secrets
+- **Issue:** `npx wrangler deploy` clears all secret_text bindings that aren't in wrangler.toml
+- **Fix:** Re-set secrets via `wrangler secret put` after each deploy
+- **GATEWAY_TOKEN** on roc-site and **TOKEN** on hermes-cloudflare both re-set to `rocspace2026`
+
+### Deploy Method (Updated)
+```bash
+# Deploy roc-site
+cd workers/site
+CLOUDFLARE_API_TOKEN=cfat_TOKEN CLOUDFLARE_ACCOUNT_ID=37c44b4d3f192a627d20e46bdf910e79 npx wrangler deploy
+
+# Re-set secrets after deploy (wrangler wipes them!)
+echo "rocspace2026" | CLOUDFLARE_API_TOKEN=cfat_TOKEN CLOUDFLARE_ACCOUNT_ID=37c44b4d3f192a627d20e46bdf910e79 npx wrangler secret put GATEWAY_TOKEN --name roc-site
+```

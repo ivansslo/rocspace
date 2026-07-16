@@ -1,8 +1,5 @@
 // workers/gateway/src/solace.ts
-import { json } from './utils';
-import type { Env } from './types';
-
-export function solaceEmit(env: Env, topic: string, data: any) {
+function solaceEmit(env, topic, data) {
   if (!env.SOLACE_URL) return;
   fetch(`${env.SOLACE_URL}/topic/${topic}`, {
     method: "POST",
@@ -12,10 +9,10 @@ export function solaceEmit(env: Env, topic: string, data: any) {
       "Solace-delivery-mode": "direct"
     },
     body: JSON.stringify(data)
-  }).catch(() => {});
+  }).catch(() => {
+  });
 }
-
-export async function solaceStatus(env: Env) {
+async function solaceStatus(env) {
   if (!env.SOLACE_URL) {
     return json({ error: "Solace not configured" }, 503);
   }
@@ -27,7 +24,7 @@ export async function solaceStatus(env: Env) {
         "Content-Type": "application/json",
         "Solace-delivery-mode": "direct"
       },
-      body: JSON.stringify({ ping: true, ts: new Date().toISOString() })
+      body: JSON.stringify({ ping: true, ts: (/* @__PURE__ */ new Date()).toISOString() })
     });
     return json({
       status: r.status === 200 ? "connected" : "error",
@@ -35,14 +32,13 @@ export async function solaceStatus(env: Env) {
       broker: "mr-connection-mwc1f9igml1.messaging.solace.cloud",
       vpn: "roclace-cluster",
       serviceId: "p37j7q6aggq",
-      ts: new Date().toISOString()
+      ts: (/* @__PURE__ */ new Date()).toISOString()
     });
-  } catch (e: any) {
+  } catch (e) {
     return json({ error: e.message, status: "disconnected" }, 502);
   }
 }
-
-export async function solaceQueues(env: Env) {
+async function solaceQueues(env) {
   if (!env.SOLACE_SEMP_URL || !env.SOLACE_VIEW_USER || !env.SOLACE_VIEW_PASS) {
     return json({ error: "Solace SEMP credentials not configured" }, 503);
   }
@@ -52,7 +48,7 @@ export async function solaceQueues(env: Env) {
       headers: { "Authorization": "Basic " + btoa(`${env.SOLACE_VIEW_USER}:${env.SOLACE_VIEW_PASS}`) }
     });
     const d = await r.json();
-    const qs = (d.data || []).map((q: any) => ({
+    const qs = (d.data || []).map((q) => ({
       name: q.queueName,
       spoolUsage: q.msgSpoolUsage || 0,
       bindCount: q.bindCount || 0,
@@ -60,12 +56,11 @@ export async function solaceQueues(env: Env) {
       msgCountOut: q.txMsgCountOut || q.txMsgCount || 0
     }));
     return json({ queues: qs, count: qs.length, vpn: "roclace-cluster" });
-  } catch (e: any) {
+  } catch (e) {
     return json({ error: e.message }, 502);
   }
 }
-
-export async function solaceService(env: Env) {
+async function solaceService(env) {
   try {
     const r = await fetch("https://api.solace.cloud/api/v0/services/p37j7q6aggq", {
       headers: { "Authorization": `Bearer ${env.SOLACE_API_TOKEN}` }
@@ -82,7 +77,8 @@ export async function solaceService(env: Env) {
       limits: s.serviceClassDisplayedAttributes || {},
       created: s.created
     });
-  } catch (e: any) {
+  } catch (e) {
     return json({ error: e.message }, 502);
   }
 }
+
