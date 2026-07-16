@@ -1,12 +1,8 @@
 {
-  "apiKey": "AIzaSyAJBjhU9OEC9vX8jcHX6LUvwXkYOctRYuo",
-  "authDomain": "rofai-agent.firebaseapp.com",
-  "projectId": "rofai-agent",
-  "storageBucket": "rofai-agent.firebasestorage.app",
-  "messagingSenderId": "864507972707",
-  "appId": "1:864507972707:web:519bc631d36a8f16b17c56",
-  "measurementId": "G-6TFBMX7VQ0",
-  "databaseURL": "https://rofai-agent.firebaseio.com",
-  "configured": true,
-  "app": "webvirtcloud"
+  "apiKey": "AIzaSyBLpdsheG9pYmtYqGgo0af0_5Du_fDvJYk",
+  "authDomain": "yttriferous-magpie-16ppv.firebaseapp.com",
+  "projectId": "yttriferous-magpie-16ppv",
+  "storageBucket": "yttriferous-magpie-16ppv.firebasestorage.app",
+  "messagingSenderId": "819208434965",
+  "appId": "1:819208434965:web:35c60025a91bd089c3251c"
 }
