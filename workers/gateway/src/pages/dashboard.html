@@ -1,0 +1,227 @@
+// workers/gateway/src/pages/dashboard.html
+var dashboard_default = `<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Realtime Dashboard \u2014 Solace Hermes</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden}
+button,input,textarea,select{font:inherit}
+:root{color-scheme:dark;--bg:#08090d;--bg2:#0d1117;--panel:#10151f;--panel2:#151b26;--elev:#1a2230;--border:#273244;--text:#f8fafc;--muted:#94a3b8;--soft:#cbd5e1;--accent:#4f8cff;--accent2:#8b5cf6;--good:#22c55e;--warn:#f59e0b;--bad:#ef4444;--code:#05070b;--shadow:0 24px 80px rgba(0,0,0,.35);--radius:18px;--fs:14px}
+[data-theme="light"]{color-scheme:light;--bg:#f4f7fb;--bg2:#eef3f9;--panel:#ffffff;--panel2:#f8fafc;--elev:#eef4ff;--border:#d9e2ef;--text:#0f172a;--muted:#64748b;--soft:#334155;--accent:#2563eb;--accent2:#7c3aed;--code:#0f172a;--shadow:0 24px 70px rgba(15,23,42,.14)}
+@media(prefers-color-scheme:light){[data-theme="system"]{color-scheme:light;--bg:#f4f7fb;--bg2:#eef3f9;--panel:#ffffff;--panel2:#f8fafc;--elev:#eef4ff;--border:#d9e2ef;--text:#0f172a;--muted:#64748b;--soft:#334155;--accent:#2563eb;--accent2:#7c3aed;--code:#0f172a;--shadow:0 24px 70px rgba(15,23,42,.14)}}
+body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(circle at top left,rgba(79,140,255,.20),transparent 35%),radial-gradient(circle at bottom right,rgba(139,92,246,.16),transparent 38%),var(--bg);color:var(--text);font-size:var(--fs)}
+.app{height:100dvh;display:grid;grid-template-columns:278px 1fr;padding:12px;gap:12px}
+.sidebar{background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.02)),var(--panel);border:1px solid var(--border);border-radius:24px;box-shadow:var(--shadow);display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.brand{padding:18px 16px 14px;display:flex;align-items:center;gap:12px}
+.logo{width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;box-shadow:0 14px 40px rgba(79,140,255,.25)}
+.brand h1{margin:0;font-size:16px;letter-spacing:-.02em}
+.brand p{margin:2px 0 0;color:var(--muted);font-size:11px}
+.status-dot{width:9px;height:9px;border-radius:999px;background:var(--good);box-shadow:0 0 14px var(--good);margin-left:auto}
+.new-chat{margin:0 14px 12px;border:0;border-radius:16px;padding:12px 14px;color:white;background:linear-gradient(135deg,var(--accent),var(--accent2));font-weight:700;cursor:pointer}
+.nav{padding:4px 10px;display:flex;flex-direction:column;gap:6px;overflow:auto}
+.nav button,.nav a{border:1px solid transparent;background:transparent;color:var(--muted);border-radius:16px;padding:11px 12px;text-align:left;display:flex;gap:10px;align-items:center;cursor:pointer;text-decoration:none}
+.nav button:hover,.nav a:hover{background:var(--panel2);color:var(--text);border-color:var(--border)}
+.nav button.active,.nav a.active{background:linear-gradient(135deg,rgba(79,140,255,.18),rgba(139,92,246,.14));border-color:rgba(79,140,255,.35);color:var(--text)}
+.nav .ico{width:24px;height:24px;border-radius:10px;background:var(--elev);display:grid;place-items:center}
+.side-foot{margin-top:auto;padding:14px;border-top:1px solid var(--border);display:grid;gap:10px}
+.mini-card{background:var(--panel2);border:1px solid var(--border);border-radius:16px;padding:12px}
+.mini-card b{display:block;font-size:12px}
+.mini-card span{display:block;color:var(--muted);font-size:11px;margin-top:4px}
+.layout{min-width:0;display:grid;grid-template-rows:auto 1fr auto;background:rgba(16,21,31,.58);border:1px solid var(--border);border-radius:24px;overflow:hidden;box-shadow:var(--shadow);backdrop-filter:blur(18px)}
+.topbar{height:64px;padding:0 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:rgba(16,21,31,.72)}
+.menu-btn{display:none}
+.title{min-width:0}
+.title h2{font-size:15px;margin:0}
+.title p{font-size:11px;color:var(--muted);margin:3px 0 0}
+.spacer{flex:1}
+.pill,.select,select{background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:14px;padding:9px 10px}
+.select{max-width:230px}
+.icon-btn{border:1px solid var(--border);background:var(--panel);color:var(--text);border-radius:14px;padding:9px 11px;cursor:pointer}
+.main{min-height:0;overflow:hidden;position:relative}
+.toast{position:fixed;right:18px;bottom:18px;background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:12px 14px;box-shadow:var(--shadow);display:none;z-index:20}
+.toast.on{display:block}
+.mobile-tabs{display:none}
+@media(max-width:860px){
+  .app{grid-template-columns:1fr;padding:0;gap:0}
+  .sidebar{position:fixed;z-index:30;left:10px;top:10px;bottom:10px;width:min(310px,86vw);transform:translateX(-115%);transition:.2s}
+  .sidebar.open{transform:none}
+  .layout{border-radius:0;border:0;height:100dvh}
+  .menu-btn{display:block}
+  .topbar{height:58px;padding:0 10px}
+  .select{max-width:150px}
+  .mobile-tabs{display:flex;position:fixed;left:10px;right:10px;bottom:10px;z-index:9;background:rgba(16,21,31,.88);border:1px solid var(--border);border-radius:20px;padding:6px;gap:4px;backdrop-filter:blur(12px)}
+  .mobile-tabs button,.mobile-tabs a{flex:1;border:0;background:transparent;color:var(--muted);border-radius:15px;padding:8px 4px;text-decoration:none;text-align:center}
+  .mobile-tabs button.active,.mobile-tabs a.active{background:var(--panel2);color:var(--text)}
+}
+
+/* Dashboard specific styles below */
+.hero,.card{background:rgba(17,24,39,.88);border:1px solid #273244;border-radius:20px;padding:18px;margin-bottom:12px;box-shadow:0 18px 60px rgba(0,0,0,.25)}
+.pg{max-width:1220px;margin:0 auto;padding:22px}
+.hero{display:flex;gap:16px;align-items:center;justify-content:space-between;background:linear-gradient(135deg,rgba(59,130,246,.16),rgba(139,92,246,.12)),#111827}
+.logo-dash{width:54px;height:54px;border-radius:18px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);display:grid;place-items:center;font-size:26px}
+.muted{color:#94a3b8;line-height:1.55}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.stat b{font-size:28px}
+.stat span{display:block;color:#94a3b8;font-size:12px}
+.ok{color:#22c55e}
+.bad{color:#ef4444}
+.warn{color:#f59e0b}
+.btn{border:0;border-radius:12px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;padding:10px 13px;text-decoration:none;font-weight:700;display:inline-flex;margin:4px;cursor:pointer}
+.btn2{background:#0b1220;border:1px solid #273244}
+.item{padding:10px;border-radius:12px;background:#0b1220;border:1px solid #1f2937;margin:7px 0}
+.item b{display:block}
+.pill{font-size:11px;border-radius:999px;padding:3px 8px;background:#172033;color:#93c5fd}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+pre{background:#05070b;border:1px solid #273244;border-radius:14px;padding:12px;overflow:auto;white-space:pre-wrap;max-height:360px}
+.qgrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+@media(max-width:900px){.grid,.grid2,.qgrid{grid-template-columns:1fr}.hero{display:block}}
+</style>
+</head>
+<body data-theme="system">
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand"><div class="logo">\u26A1</div><div><h1>Solace Hermes</h1><p>Codex-style mobile AI hub</p></div><span class="status-dot" id="liveDot"></span></div>
+    <button class="new-chat" onclick="location.href='/chat-live'">\uFF0B New Chat</button>
+    <nav class="nav" id="nav">
+      <a href="/dashboard" class="active"><span class="ico">\u{1F3E0}</span><span>Realtime Dashboard</span></a>
+      <a data-view="chat" href="/chat-live"><span class="ico">\u{1F4AC}</span><span>Chat-Live</span></a>
+      <a data-view="coding" href="/chat-live#coding"><span class="ico">\u2318</span><span>AI Coding</span></a>
+      <a href="/crawl4ai"><span class="ico">\u{1F577}\uFE0F</span><span>Crawl4AI Page</span></a>
+      <a href="/crew"><span class="ico">\u{1F916}</span><span>CrewAI Page</span></a>
+      <a href="https://rocspace-links.certveis.workers.dev" target="_blank" rel="noopener"><span class="ico">\u{1F517}</span><span>Links Hub</span></a>
+      <a href="/integrations" target="_blank"><span class="ico">\u{1F9E9}</span><span>Integrations JSON</span></a>
+      <a href="/solace/status" target="_blank"><span class="ico">\u{1F4E1}</span><span>Solace Status</span></a>
+      <a href="/zapier"><span class="ico">\u26A1</span><span>Zapier Template</span></a>
+      <a href="/logs"><span class="ico">\u{1F4DC}</span><span>Activity Logs</span></a>
+      <a data-view="drive" href="/chat-live#drive"><span class="ico">\u{1F4C1}</span><span>Google Drive</span></a>
+      <a data-view="settings" href="/chat-live#settings"><span class="ico">\u2699\uFE0F</span><span>Settings</span></a>
+      <a data-view="profile" href="/chat-live#profile"><span class="ico">\u{1F464}</span><span>Profile</span></a>
+    </nav>
+    <div class="side-foot"><div class="mini-card"><b>Command cepat</b><span>/crawl URL \xB7 /code task \xB7 /crew topic \xB7 /help</span></div><div class="mini-card"><b>Theme</b><span>System, dark, light + ukuran font</span></div></div>
+  </aside>
+  <section class="layout">
+    <header class="topbar">
+      <button class="icon-btn menu-btn" id="menuBtn" onclick="document.getElementById('sidebar').classList.toggle('open')">\u2630</button>
+      <div class="title">
+        <h2 id="viewTitle">Realtime Dashboard</h2>
+        <p id="viewDesc">Control center untuk Chat, CrewAI, Crawl4AI, Zapier, Logs, Solace Event Mesh.</p>
+      </div>
+      <div class="spacer"></div>
+      <button class="icon-btn" id="themeBtn" onclick="cycleTheme()">\u{1F313}</button>
+    </header>
+    <main class="main" style="overflow: auto;">
+      <div class="pg">
+        <div class="hero">
+          <div class="row">
+            <div class="logo-dash">\u26A1</div>
+            <div>
+              <h1 style="margin:0">Solace Hermes Realtime Dashboard</h1>
+              <div class="muted">Control center untuk Chat, CrewAI, Crawl4AI, Zapier, Logs, Solace Event Mesh, dan semua integrasi.</div>
+            </div>
+          </div>
+          <div>
+            <button class="btn" onclick="load()">Refresh</button>
+            <a class="btn btn2" href="/chat-live">Chat-Live</a>
+          </div>
+        </div>
+        <div class="qgrid">
+          <a class="btn" href="/chat-live">\u{1F4AC} Chat-Live</a>
+          <a class="btn" href="/crawl4ai">\u{1F577}\uFE0F Crawl4AI</a>
+          <a class="btn" href="/crew">\u{1F916} CrewAI</a>
+          <a class="btn" href="/zapier">\u26A1 Zapier</a>
+          <a class="btn" href="/logs">\u{1F4DC} Logs</a>
+          <a class="btn btn2" href="/api" target="_blank">\u{1F50C} API</a>
+          <a class="btn btn2" href="/integrations" target="_blank">\u{1F9E9} Integrations</a>
+          <a class="btn btn2" href="https://rocspace-links.certveis.workers.dev" target="_blank">\u{1F517} Hub</a>
+          <a class="btn btn2" href="/solace/status" target="_blank">\u{1F4E1} Solace</a>
+          <a class="btn btn2" href="https://cf-ai.certveis.workers.dev" target="_blank">\u{1F3A8} CF AI</a>
+          <a class="btn btn2" href="https://github.com/ivansslo/Solace-Hermes-Project" target="_blank">\u{1F4E6} GitHub</a>
+        </div>
+        <div class="grid" id="stats"></div>
+        <div class="grid2">
+          <div class="card">
+            <h3>Components</h3>
+            <div id="components" class="muted">Loading...</div>
+          </div>
+          <div class="card">
+            <h3>Providers</h3>
+            <div id="providers" class="muted">Loading...</div>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="card">
+            <h3>Solace Queues</h3>
+            <div id="queues" class="muted">Loading...</div>
+          </div>
+          <div class="card">
+            <h3>Recent Server Logs</h3>
+            <div class="row">
+              <input id="token" type="password" placeholder="TOKEN Worker" style="background:#09090b;color:white;border:1px solid #273244;border-radius:10px;padding:9px">
+              <button class="btn btn2" onclick="loadLogs()">Load Protected Logs</button>
+            </div>
+            <pre id="logs">Loading public status...</pre>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Raw Dashboard Status</h3>
+          <pre id="raw">Loading...</pre>
+        </div>
+      </div>
+    </main>
+  </section>
+</div>
+<div class="mobile-tabs" id="mobileTabs">
+  <a href="/dashboard" class="active">\u{1F3E0}</a>
+  <a data-view="chat" href="/chat-live">\u{1F4AC}</a>
+  <a data-view="coding" href="/chat-live#coding">\u2318</a>
+  <a href="/crawl4ai">\u{1F577}\uFE0F</a>
+  <a href="/crew">\u{1F916}</a>
+  <a href="/logs">\u{1F4DC}</a>
+  <a href="https://rocspace-links.certveis.workers.dev" target="_blank" rel="noopener">\u{1F517}</a>
+  <a data-view="settings" href="/chat-live#settings">\u2699\uFE0F</a>
+</div>
+<script>
+function cls(s){return s==='connected'||s==='active'||s==='running'||s===true?'ok':(s==='unknown'?'warn':'bad')}
+function stat(k,v){return '<div class="card stat"><b>'+v+'</b><span>'+k+'</span></div>'}
+async function load(){
+  try{
+    var d=await fetch('/dashboard/status').then(r=>r.json());
+    window.last=d;
+    document.getElementById('stats').innerHTML=stat('Version',d.version)+stat('Models',d.counts.models+' + '+d.counts.cf_ai_models)+stat('Integrations',d.counts.integrations)+stat('Queues',d.counts.queues)+stat('Workers',Object.keys(d.workers).length)+stat('Components',d.counts.components)+stat('Endpoints',d.counts.endpoints)+stat('Solace',d.solace.status);
+    document.getElementById('components').innerHTML=d.components.map(x=>'<div class="item"><b>'+x.component+' <span class="pill '+cls(x.status)+'">'+x.status+'</span></b><span>'+x.detail+'</span></div>').join('');
+    document.getElementById('providers').innerHTML=Object.keys(d.providers).map(k=>'<div class="item"><b>'+k+' <span class="pill '+cls(d.providers[k])+'">'+(d.providers[k]?'configured':'missing')+'</span></b></div>').join('');
+    document.getElementById('queues').innerHTML=(d.queues||[]).map(q=>'<div class="item"><b>'+q.name+'</b><span>spool '+q.spoolUsage+' \xB7 binds '+q.bindCount+' \xB7 in '+q.msgCountIn+' \xB7 out '+q.msgCountOut+'</span></div>').join('')||'<span class="muted">No queue data</span>';
+    document.getElementById('logs').textContent=JSON.stringify(d.logs||{},null,2);
+    document.getElementById('raw').textContent=JSON.stringify(d,null,2)
+  }catch(e){
+    document.getElementById('raw').textContent='Error: '+e.message
+  }
+}
+function t(){
+  var v=document.getElementById('token').value||localStorage.getItem('hermes_token')||prompt('TOKEN Worker')||'';
+  if(v)localStorage.setItem('hermes_token',v);
+  return v
+}
+async function loadLogs(){
+  var out=document.getElementById('logs');
+  out.textContent='Loading...';
+  try{
+    var r=await fetch('/logs/list?limit=25',{headers:{Authorization:'Bearer '+t()}});
+    out.textContent=JSON.stringify(await r.json(),null,2)
+  }catch(e){
+    out.textContent='Error: '+e.message
+  }
+}
+function setTheme(t){document.body.setAttribute('data-theme',t);localStorage.setItem('hermes_theme',t)}
+function cycleTheme(){var a=['system','dark','light'];var c=document.body.getAttribute('data-theme')||'system';setTheme(a[(a.indexOf(c)+1)%a.length])}
+setTheme(localStorage.getItem('hermes_theme')||'system');
+load();
+setInterval(load,15000);
+<\/script>
+</body>
+</html>`;
+

@@ -1,0 +1,160 @@
+// workers/gateway/src/pages/crew.html
+var crew_default = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>CrewAI \u2014 Solace Hermes</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,sans-serif;background:#09090b;color:#fafafa;min-height:100dvh;display:flex;justify-content:center}
+.pg{width:100%;max-width:520px;padding:24px 16px 40px}
+.hero{text-align:center;padding:32px 0 24px}
+.hero-icon{width:80px;height:80px;border-radius:20px;background:linear-gradient(135deg,#f97316,#ef4444);display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 16px;box-shadow:0 0 40px rgba(249,115,22,.2)}
+.hero h1{font-size:22px;font-weight:800;background:linear-gradient(135deg,#f97316,#ef4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero p{color:#71717a;font-size:13px;margin-top:6px;line-height:1.5}
+.stats{display:flex;justify-content:center;gap:20px;margin-top:16px}
+.stats div{text-align:center}
+.stats .n{font-size:20px;font-weight:700;color:#f97316}
+.stats .l{font-size:9px;color:#71717a;text-transform:uppercase;letter-spacing:.5px}
+.agents{display:flex;flex-direction:column;gap:10px;margin-top:24px}
+.agent{padding:16px;background:#18181b;border:1px solid #27272a;border-radius:14px;display:flex;gap:12px;align-items:flex-start}
+.agent:hover{border-color:#f97316;transform:translateY(-1px);transition:all .2s}
+.agent .av{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.agent .av.r{background:rgba(59,130,246,.1)}
+.agent .av.a{background:rgba(139,92,246,.1)}
+.agent .av.w{background:rgba(34,197,94,.1)}
+.agent .info h3{font-size:14px;font-weight:600;margin-bottom:3px}
+.agent .info p{font-size:11px;color:#71717a;line-height:1.4}
+.agent .info .tag{display:inline-block;font-size:9px;padding:2px 7px;border-radius:4px;margin-top:6px;font-weight:600;letter-spacing:.3px}
+.agent .info .tag.blue{background:rgba(59,130,246,.12);color:#3b82f6}
+.agent .info .tag.purple{background:rgba(139,92,246,.12);color:#8b5cf6}
+.agent .info .tag.green{background:rgba(34,197,94,.12);color:#22c55e}
+.sc{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#71717a;margin:24px 0 10px 4px}
+.flow{padding:16px;background:#18181b;border:1px solid #27272a;border-radius:14px;margin-bottom:10px}
+.flow-step{display:flex;align-items:center;gap:10px;padding:8px 0}
+.flow-step .num{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#f97316,#ef4444);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.flow-step .txt{font-size:12px;color:#a1a1aa}
+.flow-step .txt b{color:#fafafa}
+.flow-line{width:2px;height:16px;background:#27272a;margin-left:13px}
+.try-box{margin-top:24px;padding:16px;background:linear-gradient(135deg,rgba(249,115,22,.06),rgba(239,68,68,.06));border:1px solid #27272a;border-radius:14px}
+.try-box h3{font-size:14px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.try-input{display:flex;gap:8px}
+.try-input input{flex:1;background:#09090b;color:#fafafa;border:1px solid #27272a;border-radius:8px;padding:10px 12px;font-size:13px;outline:none}
+.try-input input:focus{border-color:#f97316}
+.try-input button{padding:10px 18px;background:linear-gradient(135deg,#f97316,#ef4444);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
+.try-input button:hover{opacity:.9}
+#result{margin-top:12px;display:none;padding:12px;background:#09090b;border:1px solid #27272a;border-radius:10px;font-size:12px;color:#a1a1aa;white-space:pre-wrap;max-height:300px;overflow-y:auto;line-height:1.5}
+#result.on{display:block}
+.links{display:flex;flex-direction:column;gap:6px;margin-top:16px}
+.lk{display:flex;align-items:center;gap:10px;padding:12px 14px;background:#18181b;border:1px solid #27272a;border-radius:12px;text-decoration:none;color:#fafafa;transition:all .2s}
+.lk:hover{border-color:#f97316;transform:translateY(-1px)}
+.lk .ic{font-size:18px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:rgba(249,115,22,.06);border-radius:8px;flex-shrink:0}
+.lk .in{flex:1;min-width:0}
+.lk .in h3{font-size:13px;font-weight:600}
+.lk .in p{font-size:10px;color:#71717a}
+.lk .ar{color:#3f3f46;font-size:12px}
+.ft{text-align:center;margin-top:24px;color:#3f3f46;font-size:9px;letter-spacing:.3px}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;padding:3px 8px;border-radius:5px;font-weight:700;letter-spacing:.3px;background:#f97316;color:#000}
+</style>
+</head>
+<body>
+<div class="pg">
+
+<div class="hero">
+<div class="hero-icon">&#129302;</div>
+<h1>CrewAI Agents</h1>
+<p>Multi-agent AI workforce &#8212; Research, Analyze, Report<br>Powered by Groq &#9889; + Solace Event Mesh</p>
+<div class="stats">
+<div><div class="n">3</div><div class="l">Agents</div></div>
+<div><div class="n">3</div><div class="l">Tasks</div></div>
+<div><div class="n">&#9889;</div><div class="l">Sequential</div></div>
+</div>
+</div>
+
+<div class="sc">&#129302; AI Agents</div>
+<div class="agents">
+<div class="agent">
+<div class="av r">&#128269;</div>
+<div class="info">
+<h3>Research Specialist</h3>
+<p>Finds accurate, comprehensive information from multiple sources. Verifies facts and structures findings.</p>
+<span class="tag blue">RESEARCHER</span>
+</div>
+</div>
+<div class="agent">
+<div class="av a">&#128202;</div>
+<div class="info">
+<h3>Data Analyst</h3>
+<p>Analyzes research findings, identifies patterns, draws conclusions, provides actionable recommendations.</p>
+<span class="tag purple">ANALYST</span>
+</div>
+</div>
+<div class="agent">
+<div class="av w">&#9997;&#65039;</div>
+<div class="info">
+<h3>Content Writer</h3>
+<p>Creates clear, well-structured reports. Transforms complex analysis into readable markdown content.</p>
+<span class="tag green">WRITER</span>
+</div>
+</div>
+</div>
+
+<div class="sc">&#9889; Workflow</div>
+<div class="flow">
+<div class="flow-step"><div class="num">1</div><div class="txt"><b>Research</b> &#8212; Specialist gathers data &amp; sources</div></div>
+<div class="flow-line"></div>
+<div class="flow-step"><div class="num">2</div><div class="txt"><b>Analyze</b> &#8212; Analyst finds patterns &amp; insights</div></div>
+<div class="flow-line"></div>
+<div class="flow-step"><div class="num">3</div><div class="txt"><b>Report</b> &#8212; Writer creates final document</div></div>
+</div>
+
+<div class="sc">&#128640; Try It</div>
+<div class="try-box">
+<h3>&#9889; Run Crew</h3>
+<div class="try-input">
+<input type="text" id="topicInput" placeholder="Enter topic... e.g. AI agents 2026" value="AI agents in 2026">
+<button id="runBtn" onclick="runCrew()">Run</button>
+</div>
+<div id="result"></div>
+</div>
+
+<div class="sc">&#128279; Connected</div>
+<div class="links">
+<a class="lk" href="https://hermes-cloudflare.certveis.workers.dev/chat-live" target="_blank"><span class="ic">\u{1F4AC}</span><div class="in"><h3>Hermes Chat-Live</h3><p>Multi-model AI chat with streaming</p></div><span class="ar">&#8250;</span></a>
+<a class="lk" href="https://hermes-cloudflare.certveis.workers.dev/solace/status" target="_blank"><span class="ic">&#128225;</span><div class="in"><h3>Solace Event Mesh</h3><p>RoClace Cluster &#183; Singapore &#183; 5 queues</p></div><span class="ar">&#8250;</span></a>
+<a class="lk" href="https://rocspace-links.certveis.workers.dev" target="_blank"><span class="ic">&#128279;</span><div class="in"><h3>AI Agent Hub</h3><p>All integrations &#183; 77 models &#183; 1019 tools</p></div><span class="ar">&#8250;</span></a>
+<a class="lk" href="https://github.com/ivansslo/Solace-Hermes-Project" target="_blank"><span class="ic">&#128025;</span><div class="in"><h3>GitHub</h3><p>ivansslo/Solace-Hermes-Project</p></div><span class="ar">&#8250;</span></a>
+</div>
+
+<div class="ft">CrewAI &#215; Solace Hermes &#183; Groq Llama 70B &#183; v15.1<br>&#169; 2026 Ivan Ssl</div>
+
+</div>
+
+<script>
+async function runCrew(){
+  var topic=document.getElementById('topicInput').value.trim();
+  if(!topic)return;
+  var btn=document.getElementById('runBtn');
+  var res=document.getElementById('result');
+  btn.disabled=true;btn.textContent='Running...';
+  res.className='on';res.textContent='Sending to Hermes Gateway \u2192 CrewAI agents...\\\\n\\\\nResearcher \u2192 Analyst \u2192 Writer\\\\nPlease wait...\\\\n';
+  try{
+    var r=await fetch('https://hermes-cloudflare.certveis.workers.dev/solace/task',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+(localStorage.getItem('hermes_token')||prompt('Masukkan bearer token Worker')||''),'Content-Type':'application/json'},
+      body:JSON.stringify({type:'chat',prompt:'You are a research crew. Research, analyze, and write a report about: '+topic+'. Provide a structured report with: 1) Research findings, 2) Analysis & insights, 3) Recommendations.',model:'llama-3.3-70b-versatile',max_tokens:4096})
+    });
+    var d=await r.json();
+    var content=(d.choices&&d.choices[0]&&d.choices[0].message&&d.choices[0].message.content)||JSON.stringify(d,null,2);
+    res.textContent=content;
+  }catch(e){
+    res.textContent='Error: '+e.message;
+  }
+  btn.disabled=false;btn.textContent='Run';
+}
+<\/script>
+</body>
+</html>
+`;
+

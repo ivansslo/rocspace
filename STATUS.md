@@ -1,118 +1,72 @@
-# RocSpace Infrastructure Status Report
-**Updated:** 2026-07-16 · **Gateway:** v17.1.1 · **Site:** v17.2.0
+# RocSpace Infrastructure Status
+> **Last Updated:** 2026-07-16 · **Version:** v17.3.1 (site) / v17.1.1 (gateway)
 
----
+## 🟢 Active Services
 
-## 🟢 v17.2.0 — WebVirtCloud + Firebase Auth
+| Service | Status | Details |
+|---------|--------|---------|
+| roc-site (CF Worker) | ✅ Active | v17.3.1 · 16 domains · unified router |
+| hermes-cloudflare (CF Worker) | ✅ Active | v17.1.1 · 16 AI models · 5 providers |
+| Oracle VM | ✅ Running | Singapore · 1CPU/16GB · Docker stack |
+| WebVirtCloud | ✅ Running | Firebase Auth · signInWithRedirect |
+| Uptime Kuma | ✅ Running | Port 3001 · via Nginx |
+| PostgreSQL | ✅ Healthy | v17 Alpine · 4 tables |
+| Redis | ✅ Healthy | v7.4 · port 6379 |
+| Nginx Proxy Manager | ✅ Running | Port 8080 · no SSL yet |
+| Clerk Auth | ✅ Active | 26 origins · 8 social logins |
+| Firebase Auth | ✅ Active | yttriferous-magpie-16ppv |
+| Solace PubSub+ | ✅ Connected | Singapore · 5 queues |
+| Tailscale | ✅ Connected | 4 nodes (2 active) |
 
-### What Changed in v17.2.0
-- **WebVirtCloud** deployed on Oracle VM (Docker, `linkease/webvirtcloud`)
-- **Firebase Auth** integrated — Google Sign-in for VM Console
-- **VM Console** accessible at `https://vm.roadfx.biz.id` and `https://roadfx.biz.id/vm`
-- **Uptime Monitor** accessible at `http://161.118.253.28/monitor/`
-- **16 domains** now mapped to roc-site (added vm.roadfx.biz.id, monitor.roadfx.biz.id)
-- roc-site Worker serves Firebase bridge page directly (no proxy needed for auth page)
-- WebVirtCloud iframe loads from Oracle VM port 80 (Nginx reverse proxy)
+## 🔴 Down Services
 
-### WebVirtCloud Configuration
-- **Docker container:** `rocspace-wvc` (linkease/webvirtcloud:latest)
-- **Ports:** 8090 (HTTP), 6080 (noVNC)
-- **Admin credentials:** admin / rocspace2026
-- **Firebase project:** rofai-agent
-- **Firebase Auth:** Google Sign-in enabled
-- **Nginx routing on VM:**
-  - `/vm/` → Firebase bridge page (local HTML)
-  - `/vm/wvc/` → WebVirtCloud reverse proxy
-  - `/monitor/` → Uptime Kuma reverse proxy
-  - `/health` → VM health check
+| Service | Status | Issue |
+|---------|--------|-------|
+| CloudRun (ai-vitality) | ❌ DOWN | GCP billing OR_BACR2_44 |
+| OpenAI Direct models | ⚠️ Quota | insufficient_quota error |
 
----
+## 🌐 Domain Status (16 → roc-site)
 
-## 🟢 v17.1.1 — OpenAI Routing Fix
+| Domain | HTTP | Target |
+|--------|------|--------|
+| roadfx.biz.id | ✅ 200 | Dashboard |
+| www.roadfx.biz.id | ✅ 200 | Dashboard |
+| dashboard.roadfx.biz.id | ✅ 404→CloudRun | CloudRun (DOWN) |
+| chat.roadfx.biz.id | ✅ 404→CloudRun | CloudRun (DOWN) |
+| status.roadfx.biz.id | ✅ 200 | Status page |
+| cloudrun.roadfx.biz.id | ✅ 404→CloudRun | CloudRun (DOWN) |
+| ai.roadfx.biz.id | ✅ 200 | Gateway |
+| gateway.roadfx.biz.id | ✅ 200 | Gateway |
+| api.roadfx.biz.id | ✅ 200 | Gateway |
+| auth.roadfx.biz.id | ✅ 200 | Gateway |
+| factory.roadfx.biz.id | ✅ 200 | Gateway |
+| webhook.roadfx.biz.id | ✅ 200 | Gateway |
+| r2.roadfx.biz.id | ✅ 200 | Gateway |
+| app.roadfx.biz.id | ✅ 200 | Gateway/Links |
+| vm.roadfx.biz.id | ✅ 200 | Firebase bridge |
+| monitor.roadfx.biz.id | ✅ 302 | → Oracle VM |
 
-### What Changed in v17.1.1
-- Fixed routing: `openai/gpt-4o` → OpenRouter (was incorrectly going to OpenAI Direct)
-- Only unprefixed models (e.g. `gpt-4o`) route to OpenAI Direct when `OPENAI_KEY` is set
-- `openai-direct/` prefix forces OpenAI Direct
-- All 5 providers confirmed active: groq ✅ gemini ✅ openrouter ✅ openai ✅ clerk ✅
-- OpenAI billing quota exceeded — fallback to OpenRouter working
+## 🤖 AI Models (16)
 
----
+**Working (11):** llama-3.3-70b-versatile, llama-3.1-8b-instant, qwen/qwen3-32b, qwen/qwen3-235b-a22b, qwen/qwen3.6-27b, openai/gpt-4o, openai/gpt-oss-120b, deepseek/deepseek-r1, meta-llama/llama-4-scout-17b-16e-instruct, google/gemini-2.5-flash, google/gemini-2.5-pro-preview
 
-## 🟢 v17.1.0 — OpenAI Direct + 16 Models
+**Quota Exceeded (5):** gpt-4.1, gpt-4.1-mini, gpt-4o (Direct), o3-mini, o4-mini
 
-### What Changed in v17.1.0
-- **OpenAI Direct provider** added to Gateway — `OPENAI_KEY` env binding
-- 5 OpenAI models added: `gpt-4.1`, `gpt-4.1-mini`, `gpt-4o`, `o3-mini`, `o4-mini`
-- Smart routing: unprefixed → OpenAI direct (if key set), `openai/` prefix → OpenRouter
-- `openai-direct/` prefix for explicit direct routing
-- Fallback chain: OpenAI → Groq → OpenRouter → Gemini
-- Provider status now includes `openai` field
-- Total models: 16 (5 OpenAI + 2 Groq + 5 OpenRouter + 2 Google + 2 Groq)
+## 🔐 Security Audit
 
----
+- ✅ No hardcoded secrets in source code
+- ✅ All API keys via Cloudflare secret_text bindings (env.XXX)
+- ✅ Firebase API key & Clerk PK = public browser keys (safe)
+- ✅ Git remote URLs cleaned after push
+- ⚠️ Oracle VM port 443 closed (no SSL)
+- ⚠️ CloudRun CLERK_SECRET_KEY = pk_test_ (should be sk_test_)
 
-## 🟢 v17.0.0 — UNIFIED ROUTER (All Domains → roc-site)
+## 📋 Pending Actions
 
-Major architecture change: all 16 domains now route through a single `roc-site` worker.
-
-### 16 Domain Routes — All → roc-site (Unified)
-
-| Domain | Routes To | Status |
-|---|---|---|
-| `roadfx.biz.id` | Dashboard | ✅ 200 |
-| `www.roadfx.biz.id` | Dashboard | ✅ 200 |
-| `dashboard.roadfx.biz.id` | CloudRun Dashboard | ✅ 200 |
-| `chat.roadfx.biz.id` | CloudRun Chat-Live | ✅ 200 |
-| `status.roadfx.biz.id` | Status page | ✅ 200 |
-| `cloudrun.roadfx.biz.id` | CloudRun proxy | ✅ 200 |
-| `ai.roadfx.biz.id` | Gateway (AI) | ✅ 200 |
-| `gateway.roadfx.biz.id` | Gateway (API) | ✅ 200 |
-| `api.roadfx.biz.id` | Gateway (API) | ✅ 200 |
-| `auth.roadfx.biz.id` | Gateway (Auth) | ✅ 200 |
-| `factory.roadfx.biz.id` | Gateway (CF AI) | ✅ 200 |
-| `webhook.roadfx.biz.id` | Gateway (Webhook) | ✅ 200 |
-| `r2.roadfx.biz.id` | Gateway (R2) | ✅ 200 |
-| `app.roadfx.biz.id` | Links Hub → redirect | ✅ 302 |
-| `vm.roadfx.biz.id` | VM Console (Firebase) | ✅ 200 |
-| `monitor.roadfx.biz.id` | Uptime Monitor | ✅ 302 |
-
----
-
-## 🗂️ Oracle Cloud VM Services
-
-| Container | Port | Status | Purpose |
-|---|---|---|---|
-| rocspace-pg | 5432 | ✅ Healthy | PostgreSQL 17 |
-| rocspace-redis | 6379 | ✅ Healthy | Redis 7.4 |
-| rocspace-monitor | 3001 | ✅ Healthy | Uptime Kuma |
-| rocspace-npm | 8080/8443/8181 | ✅ Running | Nginx Proxy Manager |
-| rocspace-wvc | 8090/6080 | ✅ Running | WebVirtCloud + noVNC |
-
----
-
-## 🔑 Quick Reference
-
-- **VM Console:** `https://vm.roadfx.biz.id` or `https://roadfx.biz.id/vm`
-- **Monitor:** `http://161.118.253.28/monitor/`
-- **WVC Admin:** admin / rocspace2026
-- **Firebase Project:** rofai-agent
-- **Gateway URL:** `https://ai.roadfx.biz.id`
-- **Chat-Live:** `https://chat.roadfx.biz.id`
-- **Auth Token:** Bearer `hk-rocspace-2026`
-- **Default Model:** `llama-3.3-70b-versatile` (Groq)
-- **Deploy command:** `node scripts/deploy-worker.mjs gateway`
-- **CF Account:** `37c44b4d3f192a627d20e46bdf910e79`
-
----
-
-## ⚠️ Remaining Issues
-
-| Issue | Priority | Notes |
-|---|---|---|
-| Firebase authorized domains | High | Need to add vm.roadfx.biz.id, 161.118.253.28 in Firebase Console |
-| CLERK_SECRET_KEY in Cloud Run | Medium | Still pk_test_, should be sk_test_ |
-| Oracle VM cost | Medium | VM.Standard3.Flex ~$39/mo, A1.Flex (free) still out of capacity |
-| Cloud Run version | Phase 3+ | Still v15.4 from AI Studio |
-| DNS A records | Low | vm/monitor subdomains need AAAA 100:: in CF DNS (cfat token lacks Zone permission) |
-| OpenAI billing | Low | Quota exceeded, fallback to OpenRouter works |
+1. Fix GCP billing (OR_BACR2_44) — manual GCP Console
+2. Top up OpenAI billing
+3. Setup auto-retry for A1.Flex (Always Free) VM
+4. Configure SSL/HTTPS on Oracle VM
+5. Get CF Zone/DNS token
+6. Migrate CloudRun to rocspace monorepo
+7. Rekonversi gateway/src/ ke proper TypeScript
