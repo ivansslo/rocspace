@@ -44,7 +44,7 @@ try {
   const loaderArgs = workerArg === 'gateway' ? '--loader:.html=text' : '';
   execSync(
     `npx esbuild ${join(workerDir, 'src/index.ts')} --bundle --format=esm --target=es2022 ` +
-    `--outfile=${distFile} ${aliasMap} ${loaderArgs}`,
+    `--outfile=${distFile} ${aliasMap} ${loaderArgs} --external:cloudflare:sockets`,
     { stdio: 'inherit', cwd: process.cwd() }
   );
 } catch {

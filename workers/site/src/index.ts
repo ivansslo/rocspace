@@ -4,11 +4,50 @@
 // ═══════════════════════════════════════════════════════════
 
 import { ENDPOINTS, DOMAIN_MAP, corsHeaders, jsonResponse, htmlResponse } from '@rocspace/shared';
+import { connect } from 'cloudflare:sockets';
 
 const GATEWAY = ENDPOINTS.GATEWAY;
 const CLOUDRUN = ENDPOINTS.CLOUDRUN;
 const AIS_DEV = ENDPOINTS.AIS_DEV;  // New candidate: Google AI Studio Applet (asia-east1)
 const VM_HOST = '161.118.253.28';
+
+// ─── Oracle VM TCP bridge (Workers fetch() ke IP-literal diblokir CF 1003) ──
+// Raw HTTP/1.1 over TCP socket → mengambil endpoint JSON dari VM (Nginx :80).
+async function vmTcpGet(path: string, timeoutMs = 6000): Promise<string> {
+  const socket = connect({ hostname: VM_HOST, port: 80 });
+  const enc = new TextEncoder();
+  const req = `GET ${path} HTTP/1.1\r\nHost: ${VM_HOST}\r\nUser-Agent: roc-site/18\r\nAccept: application/json\r\nConnection: close\r\n\r\n`;
+  const writeAndRead = (async () => {
+    const writer = socket.writable.getWriter();
+    await writer.write(enc.encode(req));
+    writer.releaseLock();
+    const reader = socket.readable.getReader();
+    const chunks: Uint8Array[] = [];
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (value) chunks.push(value);
+    }
+    reader.releaseLock();
+    return chunks;
+  })();
+  const chunks = await Promise.race([
+    writeAndRead,
+    new Promise<never>((_, rej) => setTimeout(() => rej(new Error('vm socket timeout')), timeoutMs)),
+  ]);
+  await socket.close().catch(() => {});
+  let len = 0;
+  for (const c of chunks) len += c.length;
+  const buf = new Uint8Array(len);
+  let off = 0;
+  for (const c of chunks) { buf.set(c, off); off += c.length; }
+  const raw = new TextDecoder().decode(buf);
+  const idx = raw.indexOf('\r\n\r\n');
+  if (idx === -1) throw new Error('vm bad response');
+  const statusLine = raw.slice(0, raw.indexOf('\r\n'));
+  if (!/^HTTP\/1\.[01] 2\d\d/.test(statusLine)) throw new Error(`vm ${statusLine}`);
+  return raw.slice(idx + 4);
+}
 
 const FULL_DOMAIN_MAP = [
   ...DOMAIN_MAP,
@@ -30,6 +69,24 @@ export default {
     // ─── VM Console ─────────────────────────────────────
     if (host.startsWith('vm.')) {
       if (path === '/' || path === '') return htmlResponse(renderVMConsole());
+      // HTTPS health bridge — dashboard/AI Studio page tidak bisa fetch http://IP
+      // langsung (mixed content), jadi /health di-proxy server-side dari sini.
+      // NB: Workers fetch() ke IP-literal diblokir (CF error 1003) dan token
+      // kita tidak punya izin DNS utk buat record origin → pakai raw TCP socket.
+      if (path === '/health') {
+        try {
+          const body = await vmTcpGet('/health');
+          return new Response(body, {
+            status: 200,
+            headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders(), 'Cache-Control': 'no-store' },
+          });
+        } catch {
+          return new Response(JSON.stringify({ status: 'down', host: 'roc-vm', error: 'VM unreachable' }), {
+            status: 502,
+            headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders(), 'Cache-Control': 'no-store' },
+          });
+        }
+      }
       return Response.redirect(`http://${VM_HOST}/vm${path === '/' ? '/' : path}`, 302);
     }
     if (host.startsWith('monitor.')) {
