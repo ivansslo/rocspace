@@ -1,6 +1,10 @@
 // workers/gateway/src/clerk.ts
-var CLERK_DOMAIN = "awake-chicken-95.clerk.accounts.dev";
-async function clerkConfig(env) {
+import { json } from './utils';
+import type { Env } from './types';
+
+const CLERK_DOMAIN = "awake-chicken-95.clerk.accounts.dev";
+
+export async function clerkConfig(env: Env) {
   const configured = !!(env.CLERK_PK && env.CLERK_SK);
   return json({
     publishableKey: env.CLERK_PK || "",
@@ -8,7 +12,8 @@ async function clerkConfig(env) {
     configured
   });
 }
-async function clerkVerify(request, env) {
+
+export async function clerkVerify(request: Request, env: Env) {
   if (!env.CLERK_SK) return json({ error: "Clerk not configured" }, 503);
   const body = await request.json().catch(() => ({}));
   if (!body.token) return json({ error: "Missing token" }, 400);
@@ -22,11 +27,12 @@ async function clerkVerify(request, env) {
       body: JSON.stringify({ token: body.token })
     });
     return json(await r.json());
-  } catch (e) {
+  } catch (e: any) {
     return json({ error: e.message }, 502);
   }
 }
-async function clerkUser(url, env) {
+
+export async function clerkUser(url: URL, env: Env) {
   if (!env.CLERK_SK) return json({ error: "Clerk not configured" }, 503);
   const uid = url.searchParams.get("id") || "";
   if (!uid) return json({ error: "Missing id" }, 400);
@@ -35,8 +41,7 @@ async function clerkUser(url, env) {
       headers: { "Authorization": `Bearer ${env.CLERK_SK}` }
     });
     return json(await r.json());
-  } catch (e) {
+  } catch (e: any) {
     return json({ error: e.message }, 502);
   }
 }
-

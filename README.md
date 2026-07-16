@@ -292,3 +292,20 @@ CF_API_TOKEN=your_token node scripts/deploy-worker.mjs gateway --esm
 ## 📝 License
 
 Private repository — © RoadFX AI 2026
+
+## 🎨 New Modern UI Templates (v18.0.0)
+
+RocSpace now ships beautiful, production-ready HTML UIs:
+
+| File | Purpose | Location |
+|------|---------|----------|
+| `ui-templates/rocspace-dashboard.html` | Full Infrastructure Xloud dashboard | Served at `/ui/dashboard-v18.html` |
+| `ui-templates/orchestrator-live.html` | Live Planner→...→Grounding UI | `/ui/orchestrator.html` |
+| `ui/roc-containers-ui.html` | Modern terminal-style container UI | In roc-containers |
+
+**Access after deploy:**
+- https://gateway.roadfx.biz.id/ui/dashboard-v18.html
+- https://gateway.roadfx.biz.id/ui/orchestrator.html
+
+These templates are **first-class** for the new Autonomous Orchestrator + AIS-DEV experience.
+

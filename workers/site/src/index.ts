@@ -1,12 +1,13 @@
 // ═══════════════════════════════════════════════════════════
 //  roc-site — Unified Router v17.3.0
-//  16 domains → roc-site, WebVirtCloud + Firebase (yttriferous-magpie-16ppv)
+//  16 domains → roc-site, WebVirtCloud + Firebase (rofai-agent)
 // ═══════════════════════════════════════════════════════════
 
 import { ENDPOINTS, DOMAIN_MAP, corsHeaders, jsonResponse, htmlResponse } from '@rocspace/shared';
 
 const GATEWAY = ENDPOINTS.GATEWAY;
 const CLOUDRUN = ENDPOINTS.CLOUDRUN;
+const AIS_DEV = ENDPOINTS.AIS_DEV;  // New candidate: Google AI Studio Applet (asia-east1)
 const VM_HOST = '161.118.253.28';
 
 const FULL_DOMAIN_MAP = [
@@ -50,11 +51,18 @@ export default {
     if (host.startsWith('gateway.')) return proxyTo(request, GATEWAY, path, url, gwToken);
     if (host.startsWith('api.')) return proxyTo(request, GATEWAY, path, url, gwToken);
     if (host.startsWith('chat.') || host.startsWith('live.')) {
-      return proxyTo(request, CLOUDRUN, path === '/' ? '/chat-live' : path, url);
+      // CloudRun DOWN (billing) — route to Gateway (full chat-live + Clerk auth)
+      return proxyTo(request, GATEWAY, path === '/' ? '/chat-live' : path, url, gwToken);
     }
     if (host.startsWith('status.')) return htmlResponse(renderStatus());
-    if (host.startsWith('dashboard.')) return proxyTo(request, CLOUDRUN, '/dashboard', url);
-    if (host.startsWith('cloudrun.')) return proxyTo(request, CLOUDRUN, path === '/' ? '/' : path, url);
+    if (host.startsWith('dashboard.')) return proxyTo(request, GATEWAY, '/dashboard', url, gwToken);
+    if (host.startsWith('cloudrun.')) {
+      // Support /cloudrun/ais for the new candidate
+      if (path.startsWith('/ais')) {
+        return proxyTo(request, AIS_DEV, path.replace('/ais', '') || '/', url);
+      }
+      return proxyTo(request, GATEWAY, path === '/' ? '/dashboard' : path, url, gwToken);
+    }
     if (host.startsWith('auth.')) return proxyTo(request, GATEWAY, path, url);
     if (host.startsWith('factory.')) return proxyTo(request, GATEWAY, path, url, gwToken);
     if (host.startsWith('webhook.')) return proxyTo(request, GATEWAY, path, url, gwToken);
@@ -65,14 +73,38 @@ export default {
     }
 
     // ─── Path-based routing ─────────────────────────────
-    if (path === '/chat-live' || path.startsWith('/chat-live/')) return proxyTo(request, CLOUDRUN, path, url);
+    if (path === '/chat-live' || path.startsWith('/chat-live/')) {
+      // CloudRun DOWN → use Gateway (full chat-live UI + auth)
+      return proxyTo(request, GATEWAY, path, url, gwToken);
+    }
     if (path === '/profile' || path.startsWith('/profile/')) return Response.redirect(url.origin + '/chat-live#profile', 302);
     if (path === '/chat') return htmlResponse(renderQuickChat());
     if (path === '/status') return htmlResponse(renderStatus());
     if (path.startsWith('/api/')) return proxyTo(request, GATEWAY, path, url);
     if (path.startsWith('/auth/')) return proxyTo(request, GATEWAY, path, url);
     if (path.startsWith('/gateway/')) return proxyTo(request, GATEWAY, path.replace('/gateway', ''), url);
-    if (path.startsWith('/cloudrun/')) return proxyTo(request, CLOUDRUN, path.replace('/cloudrun', ''), url);
+    if (path.startsWith('/cloudrun/')) {
+      const sub = path.replace('/cloudrun', '');
+      if (sub.startsWith('/ais')) {
+        // Explicit /cloudrun/ais → new candidate
+        return proxyTo(request, AIS_DEV, sub.replace('/ais', '') || '/', url);
+      }
+      // Default: CloudRun DOWN → Gateway
+      return proxyTo(request, GATEWAY, '/dashboard', url, gwToken);
+    }
+
+    // ─── New AIS_DEV fallback (Google AI Studio Applet / new CloudRun) ──
+    // Usage: /ais , /ais/..., /ais-dev , /ais-dev/...
+    if (path === '/ais' || path.startsWith('/ais/') || path === '/ais-dev' || path.startsWith('/ais-dev/')) {
+      const subpath = path.replace(/^\/(ais|ais-dev)/, '') || '/';
+      return proxyTo(request, AIS_DEV, subpath, url);
+    }
+
+    // Optional: host-based new candidate (e.g. ais.roadfx.biz.id or newcr.roadfx.biz.id)
+    if (host.startsWith('ais.') || host.startsWith('newcr.') || host.startsWith('ais-dev.')) {
+      return proxyTo(request, AIS_DEV, path, url);
+    }
+
     if (path.startsWith('/webhook/')) return proxyTo(request, GATEWAY, path, url, gwToken);
     if (path === '/crew' || path.startsWith('/crew/') || path === '/crawl4ai' || path.startsWith('/crawl4ai/') ||
         path === '/zapier' || path.startsWith('/zapier/') || path === '/logs' || path.startsWith('/logs/') ||
@@ -109,7 +141,7 @@ async function proxyTo(request: Request, base: string, path: string, url: URL, i
   } catch (e: any) { return jsonResponse({ error: e.message }, 502); }
 }
 
-// ─── VM Console (Firebase bridge - yttriferous-magpie-16ppv) ──
+// ─── VM Console (Firebase bridge - rofai-agent) ──
 
 function renderVMConsole(): string {
   return `<!DOCTYPE html>
@@ -179,7 +211,7 @@ iframe{width:100%;height:100%;border:none}
     <iframe id="wvc-frame" src="" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"></iframe>
     <div class="status-bar">
       <span id="conn-status">WebVirtCloud: Waiting for auth...</span>
-      <span>RocSpace v17.3.0 · Firebase yttriferous-magpie-16ppv</span>
+      <span>RocSpace v17.3.0 · Firebase rofai-agent</span>
     </div>
   </div>
 </div>
@@ -187,7 +219,7 @@ iframe{width:100%;height:100%;border:none}
 import{initializeApp}from'https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js';
 import{getAuth,signInWithPopup,GoogleAuthProvider,onAuthStateChanged,signOut}from'https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js';
 
-const cfg={apiKey:"AIzaSyBLpdsheG9pYmtYqGgo0af0_5Du_fDvJYk",authDomain:"yttriferous-magpie-16ppv.firebaseapp.com",projectId:"yttriferous-magpie-16ppv",storageBucket:"yttriferous-magpie-16ppv.firebasestorage.app",messagingSenderId:"819208434965",appId:"1:819208434965:web:35c60025a91bd089c3251c"};
+const cfg={apiKey:"AIzaSyAJBjhU9OEC9vX8jcHX6LUvwXkYOctRYuo",authDomain:"rofai-agent.firebaseapp.com",projectId:"rofai-agent",storageBucket:"rofai-agent.firebasestorage.app",messagingSenderId:"864507972707",appId:"1:864507972707:web:519bc631d36a8f16b17c56",measurementId:"G-6TFBMX7VQ0"};
 const app=initializeApp(cfg);const auth=getAuth(app);const prov=new GoogleAuthProvider();
 const WVC="http://161.118.253.28/vm/wvc/";
 
@@ -248,13 +280,14 @@ nav{text-align:center;padding:16px;background:#0f0f17;border-bottom:1px solid #1
 <a href="https://app.roadfx.biz.id" class="card"><h2>📱 Apps Hub</h2><div class="stat">16</div><div class="label">Domains</div><p>Apps · Tools · Skills</p></a>
 </div>
 <div class="services"><h2 style="margin-bottom:16px;font-size:1.3em">🔄 Infrastructure</h2>
-<div class="svc-row"><div><div class="svc-name">WebVirtCloud + Firebase</div><div class="svc-detail">Oracle VM · yttriferous-magpie-16ppv · KVM</div></div><span class="svc-status on">● Running</span></div>
+<div class="svc-row"><div><div class="svc-name">WebVirtCloud + Firebase</div><div class="svc-detail">Oracle VM · rofai-agent · KVM</div></div><span class="svc-status on">● Running</span></div>
 <div class="svc-row"><div><div class="svc-name">Gateway (hermes-cloudflare)</div><div class="svc-detail">v17.1.1 · 16 models · 5 providers</div></div><span class="svc-status on">● Active</span></div>
 <div class="svc-row"><div><div class="svc-name">CloudRun (ai-vitality)</div><div class="svc-detail">us-west1 · billing issue</div></div><span class="svc-status off">● Down</span></div>
+<div class="svc-row"><div><div class="svc-name">AIS-DEV (new candidate)</div><div class="svc-detail">asia-east1 · AI Studio Applet (fallback)</div></div><span class="svc-status warn">● Available</span></div>
 <div class="svc-row"><div><div class="svc-name">CF Workers (roc-site)</div><div class="svc-detail">v17.3.0 · 16 domains</div></div><span class="svc-status on">● Active</span></div>
 <div class="svc-row"><div><div class="svc-name">Oracle Cloud VM</div><div class="svc-detail">Singapore · 1CPU/16GB · Docker</div></div><span class="svc-status on">● Running</span></div>
 <div class="svc-row"><div><div class="svc-name">Clerk Auth</div><div class="svc-detail">25 origins · 8 social logins</div></div><span class="svc-status on">● Active</span></div>
-<div class="svc-row"><div><div class="svc-name">Firebase Auth</div><div class="svc-detail">yttriferous-magpie-16ppv · Google Sign-in</div></div><span class="svc-status on">● Active</span></div>
+<div class="svc-row"><div><div class="svc-name">Firebase Auth</div><div class="svc-detail">rofai-agent · Google Sign-in</div></div><span class="svc-status on">● Active</span></div>
 <div class="svc-row"><div><div class="svc-name">Solace PubSub+</div><div class="svc-detail">Singapore · 5 queues</div></div><span class="svc-status on">● Connected</span></div>
 </div>
 <div class="domain-grid"><h2 style="margin-bottom:16px;font-size:1.3em">🌐 Domains (All → roc-site)</h2>${domains}</div>
@@ -302,7 +335,7 @@ function renderStatus(): string {
 <div class="row"><span>Uptime Monitor</span><span class="ok">● Running</span></div>
 <div class="row"><span>CloudRun (ai-vitality)</span><span class="err">● DOWN · billing issue</span></div>
 <div class="row"><span>Clerk Auth</span><span class="ok">● 25 origins · 8 social logins</span></div>
-<div class="row"><span>Firebase Auth</span><span class="ok">● yttriferous-magpie-16ppv</span></div>
+<div class="row"><span>Firebase Auth</span><span class="ok">● rofai-agent</span></div>
 <div class="row"><span>Solace Broker</span><span class="ok">● Connected · Singapore</span></div>
 <div class="row"><span>Oracle VM</span><span class="ok">● Running · Singapore</span></div>
 <div class="row"><span>AI Models</span><span class="ok">● 16 models (5 providers)</span></div>

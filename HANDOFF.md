@@ -60,7 +60,10 @@ rocspace/
 │       ├── crew.html (9KB)
 │       ├── crawl.html (3KB)
 │       └── zapier.html (3KB)
-├── scripts/deploy-worker.mjs        — Build + ESM deploy script
+├── scripts/
+│   ├── deploy-worker.mjs            — Build + ESM deploy script
+│   ├── build-gateway.mjs            — ESM build for gateway
+│   └── build-site.mjs               — ESM build for site
 ├── webvirtcloud-firebase-bridge.html
 ├── webvirtcloud-firebase-config.json
 ├── STATUS.md                        — Infrastructure status
@@ -69,7 +72,7 @@ rocspace/
 └── README.md
 ```
 
-**CATATAN:** File gateway/src/ di repo ini di-extract dari deployed bundle (bukan original TypeScript). Variabel dan import sudah di-bundle jadi JS. Untuk develop, perlu rekonversi ke TypeScript yang proper dengan imports/exports.
+**CATATAN:** Gateway/src sekarang sudah direkonversi ke proper TypeScript (dengan import/export). Untuk development pakai esbuild + loader .html.
 
 ---
 
@@ -163,54 +166,39 @@ rocspace/
 
 ---
 
-## 🚀 Cara Deploy Worker
+## 🚀 Cara Build & Deploy Worker
 
 ### Build (ESM bundle)
 ```bash
-# Gateway
+# Gateway (dengan HTML loader)
+node scripts/build-gateway.mjs
+
+# Site
+node scripts/build-site.mjs
+```
+
+Atau manual:
+```bash
 npx esbuild workers/gateway/src/index.ts --bundle --format=esm --target=es2022 \
   --outfile=workers/gateway/dist/index.mjs \
   --alias:@rocspace/shared=./packages/shared/src/index.ts \
   --loader:.html=text
 
-# Site
 npx esbuild workers/site/src/index.ts --bundle --format=esm --target=es2022 \
   --outfile=workers/site/dist/index.mjs \
   --alias:@rocspace/shared=./packages/shared/src/index.ts
 ```
 
-### Deploy (Multipart ESM via Python)
-```python
-import urllib.request, json, uuid
+### Deploy (Multipart ESM via script)
+```bash
+# Set token
+export CF_API_TOKEN=cfat_xxx
 
-boundary = uuid.uuid4().hex
-script_name = "hermes-cloudflare"  # or "roc-site"
+# Deploy site
+node scripts/deploy-worker.mjs site --esm
 
-metadata = {
-    "main_module": "index.js",
-    "compatibility_date": "2024-12-01",
-    "bindings": []  # EMPTY = preserve existing secret_text bindings!
-}
-
-body = b''
-body += f'--{boundary}\r\nContent-Disposition: form-data; name="metadata"\r\nContent-Type: application/json\r\n\r\n'.encode()
-body += json.dumps(metadata).encode()
-body += b'\r\n'
-body += f'--{boundary}\r\nContent-Disposition: form-data; name="index.js"\r\nContent-Type: application/javascript+module\r\n\r\n'.encode()
-body += script_content  # bytes from the .mjs file
-body += b'\r\n'
-body += f'--{boundary}--\r\n'.encode()
-
-req = urllib.request.Request(
-    f'https://api.cloudflare.com/client/v4/accounts/CF_ACCOUNT_ID/workers/scripts/{script_name}',
-    data=body,
-    headers={
-        'Authorization': 'Bearer CFAT_TOKEN',
-        'Content-Type': f'multipart/form-data; boundary={boundary}'
-    },
-    method='PUT'
-)
-resp = urllib.request.urlopen(req)
+# Deploy gateway
+node scripts/deploy-worker.mjs gateway --esm
 ```
 
 ### ⚠️ CRITICAL Deploy Rules
@@ -257,7 +245,7 @@ git remote set-url origin https://github.com/ivansslo/rocspace.git
 4. Configure NPM di Oracle VM untuk SSL/HTTPS
 5. Get CF Zone/DNS token untuk proper DNS records
 6. Migrate CloudRun ke rocspace monorepo code (Phase 3+)
-7. Rekonversi gateway/src/ dari bundled JS ke proper TypeScript dengan imports/exports
+7. Tambah lebih banyak page di gateway + test lokal
 
 ---
 
@@ -301,3 +289,16 @@ curl -s -o /dev/null -w "%{http_code}" https://roadfx.biz.id/
 ---
 
 *Dokumen ini dibuat untuk handoff antar sesi agent. Update setiap ada perubahan infrastruktur.*
+
+## 🚀 Updated Vision (2026-07-16)
+
+**RocSpace sebagai Infrastructure Xloud**  
+- All App build + Integrated auto across every provider  
+- Multi Orchestra + Autonomous Big Scale Models  
+- Full model support + orchestrator modes (coding, fast, high-thinking, grounding)  
+- AIS_DEV (gemini-2.5-flash) + Gateway first-class  
+- Auto import roc-agentsroute agent ke AI Studio / AIS-DEV  
+- roc-ai orchestrator + hermes orchestrator ready  
+
+All commands continue to use the same TOKEN auth flow.
+

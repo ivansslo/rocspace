@@ -38,8 +38,9 @@ export const DEFAULT_MODEL = 'llama-3.3-70b-versatile';
 // ─── Endpoints ───────────────────────────────────────────
 
 export const ENDPOINTS = {
-  GATEWAY: 'https://hermes-cloudflare.certveis.workers.dev',
-  CLOUDRUN: 'https://ai-vitality-819208434965.us-west1.run.app',
+  GATEWAY: 'https://gateway.roadfx.biz.id',
+  CLOUDRUN: 'https://ai-vitality-819208434965.us-west1.run.app', // DOWN (billing) — routes below prefer GATEWAY for chat/crew
+  AIS_DEV: 'https://ais-dev-4kbznhxyc5wsr5c6oxw6zz-70765440683.asia-east1.run.app', // New Google AI Studio Applet / fallback CloudRun candidate
   CLERK_DOMAIN: 'awake-chicken-95.clerk.accounts.dev',
   SOLACE_BROKER: 'mr-connection-mwc1f9igml1.messaging.solace.cloud',
   SOLACE_VPN: 'roclace-cluster',
@@ -117,3 +118,25 @@ export function htmlResponse(html: string, status = 200): Response {
     },
   });
 }
+
+/**
+ * Infrastructure Xloud — RocSpace as the Unified Multi-Provider / Multi-OS
+ * Orchestrator Platform (Big Scale Autonomous Models)
+ */
+export const INFRA_XLOUD = {
+  description: "RocSpace = Infrastructure Xloud : All Apps + Integrated auto across providers. Multi-Orchestra + Autonomous Big Scale Models",
+  providers: [
+    "gateway (primary)", 
+    "ais-dev (gemini-2.5-flash fast+high-thinking)", 
+    "groq", "openrouter", "gemini-direct", "cloudflare-ai"
+  ],
+  orchestrator_modes: ["planner", "researcher", "coder", "reviewer", "tester", "grounding"],
+  first_class: "AIS_DEV + GATEWAY priority (preserve legacy cloudrun only as fallback)",
+  auto_import: "roc-agentsroute/hermes agent JSON ready for AI Studio / AIS-DEV",
+} as const;
+
+export const MULTI_ORCHESTRATOR = {
+  hermes: "roc-agentsroute/hermes (patched autonomous loop)",
+  roc_ai: "roc-containers roc-ai orchestrator (delegates to hermes)",
+  lsmod: "Pewaris lsmod orchestration across all containers",
+} as const;

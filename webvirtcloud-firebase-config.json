@@ -4,7 +4,8 @@
   "projectId": "rofai-agent",
   "storageBucket": "rofai-agent.firebasestorage.app",
   "messagingSenderId": "864507972707",
-  "appId": "1:864507972707:web:eecc6ffff6eee599b17c56",
+  "appId": "1:864507972707:web:519bc631d36a8f16b17c56",
+  "measurementId": "G-6TFBMX7VQ0",
   "databaseURL": "https://rofai-agent.firebaseio.com",
   "configured": true,
   "app": "webvirtcloud"

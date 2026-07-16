@@ -1,11 +1,14 @@
 // workers/gateway/src/utils.ts
-function isAuthed(request, url, token) {
+import { Env } from './types';
+
+export function isAuthed(request: Request, url: URL, token: string): boolean {
   if (!token) return false;
   const auth = request.headers.get("Authorization") || "";
   const qt = url.searchParams.get("token") || "";
   return auth === `Bearer ${token}` || qt === token;
 }
-function json(d, s = 200) {
+
+export function json(d: unknown, s = 200): Response {
   return new Response(JSON.stringify(d, null, 2), {
     status: s,
     headers: {
@@ -18,14 +21,16 @@ function json(d, s = 200) {
     }
   });
 }
-function cors() {
+
+export function cors() {
   return {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type,Authorization"
   };
 }
-function secHTML() {
+
+export function secHTML() {
   return {
     "Content-Type": "text/html;charset=utf-8",
     "X-Content-Type-Options": "nosniff",
@@ -36,14 +41,15 @@ function secHTML() {
     "Content-Security-Policy": "default-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; connect-src 'self' https:"
   };
 }
-function reqMeta(request) {
+
+export function reqMeta(request: Request) {
+  const u = new URL(request.url);
   return {
     method: request.method,
-    path: new URL(request.url).pathname,
-    colo: request.cf?.colo || "",
-    country: request.cf?.country || "",
+    path: u.pathname,
+    colo: (request as any).cf?.colo || "",
+    country: (request as any).cf?.country || "",
     ip: (request.headers.get("CF-Connecting-IP") || "").replace(/(\d+\.\d+)\.\d+\.\d+$/, "$1.x.x"),
     ua: (request.headers.get("User-Agent") || "").slice(0, 160)
   };
 }
-

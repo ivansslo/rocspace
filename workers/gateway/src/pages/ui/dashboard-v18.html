@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RocSpace — Infrastructure Xloud</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Space+Grotesk:wght@500;600&amp;display=swap');
+    :root { --bg:#0a0c10; --panel:#111318; --accent:#6366f1; --accent2:#a855f7; }
+    * { box-sizing:border-box; }
+    body { font-family:'Inter',system-ui,sans-serif; background:var(--bg); color:#e2e8f0; margin:0; padding:0; }
+    .header { background:linear-gradient(135deg,#111318,#0a0c10); border-bottom:1px solid #1f2937; padding:20px 32px; display:flex; align-items:center; justify-content:space-between; }
+    .logo { display:flex; align-items:center; gap:12px; font-weight:700; font-size:22px; letter-spacing:-.5px; }
+    .logo span { background:linear-gradient(90deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .nav { display:flex; gap:8px; }
+    .nav a { color:#94a3b8; text-decoration:none; padding:8px 16px; border-radius:999px; font-size:14px; transition:all .2s; }
+    .nav a:hover, .nav a.active { background:#1f2937; color:white; }
+    .container { max-width:1280px; margin:0 auto; padding:32px; }
+    .hero { display:grid; grid-template-columns:1fr 380px; gap:32px; align-items:center; margin-bottom:48px; }
+    .hero h1 { font-size:42px; line-height:1.05; font-weight:700; margin:0 0 12px; letter-spacing:-1.5px; }
+    .hero p { color:#64748b; font-size:17px; max-width:520px; }
+    .hero-actions { display:flex; gap:12px; margin-top:28px; }
+    .btn { padding:13px 26px; border-radius:999px; font-weight:600; font-size:14px; text-decoration:none; display:inline-flex; align-items:center; gap:8px; transition:.2s; }
+    .btn-primary { background:linear-gradient(90deg,var(--accent),var(--accent2)); color:white; border:none; }
+    .btn-ghost { border:1px solid #334155; color:#e2e8f0; background:transparent; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px; }
+    .card { background:var(--panel); border:1px solid #1f2937; border-radius:20px; padding:24px; transition:transform .2s,box-shadow .2s; }
+    .card:hover { transform:translateY(-4px); box-shadow:0 20px 25px -5px rgb(0 0 0 / 0.1); }
+    .stat { font-size:32px; font-weight:700; line-height:1; margin:8px 0; }
+    .stat-label { font-size:13px; color:#64748b; }
+    .section { margin:56px 0 24px; }
+    .section h2 { font-size:20px; margin-bottom:16px; }
+    .badge { font-size:10px; padding:2px 8px; border-radius:999px; background:#1e2937; color:#64748b; }
+    .status-dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:#22c55e; margin-right:6px; box-shadow:0 0 0 3px rgba(34,197,94,.2); }
+    .terminal { font-family:ui-monospace,monospace; background:#0a0c10; border:1px solid #1f2937; border-radius:12px; padding:18px; font-size:13px; line-height:1.5; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">🚀 <span>RocSpace</span> <span class="badge">v18.0.0</span></div>
+    <div class="nav">
+      <a href="#dashboard" class="active">Dashboard</a>
+      <a href="#orchestrator">Orchestrator</a>
+      <a href="#providers">Providers</a>
+      <a href="https://gateway.roadfx.biz.id" target="_blank">Gateway</a>
+      <a href="https://ais-dev-4kbznhxyc5wsr5c6oxw6zz-70765440683.asia-east1.run.app" target="_blank">AIS-DEV</a>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="hero">
+      <div>
+        <h1>Infrastructure Xloud.<br>Autonomous.<br>Multi-Orchestra.</h1>
+        <p>Build, orchestrate and deploy all apps across every provider with full autonomous agent loops.</p>
+        <div class="hero-actions">
+          <a href="#orchestrator" class="btn btn-primary">🚀 Launch Orchestrator</a>
+          <a href="https://github.com/ivansslo/rocspace" target="_blank" class="btn btn-ghost">View on GitHub</a>
+        </div>
+        <div style="margin-top:20px;font-size:13px;color:#64748b">
+          <span class="status-dot"></span> Gateway + AIS-DEV first-class • 16+ models • TOKEN auth
+        </div>
+      </div>
+      <div class="card">
+        <div style="font-size:13px;color:#64748b">CURRENT STATUS</div>
+        <div class="stat">18.0.0</div>
+        <div style="display:flex;gap:12px;margin-top:12px">
+          <div><span class="badge">Gateway</span> <strong>🟢</strong></div>
+          <div><span class="badge">AIS-DEV</span> <strong>🟢</strong></div>
+          <div><span class="badge">Hermes</span> <strong>🟢</strong></div>
+        </div>
+        <div style="margin-top:16px;font-size:12px">RocSpace = All Apps + Auto Integrated + Multi-Orchestra + Big-Scale Autonomous Models</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="stat-label">Active Providers</div>
+        <div class="stat">7</div>
+        <div style="font-size:13px">Gateway • AIS-DEV • Groq • Gemini • OpenRouter • CF AI • OpenAI</div>
+      </div>
+      <div class="card">
+        <div class="stat-label">Autonomous Agents</div>
+        <div class="stat">12</div>
+        <div style="font-size:13px">Planner → Researcher → Coder → Reviewer → Tester + Grounding</div>
+      </div>
+      <div class="card">
+        <div class="stat-label">Models Available</div>
+        <div class="stat">26</div>
+        <div style="font-size:13px">gemini-2.5-flash (fast+thinking) • llama-3.3-70b • qwen3-235b etc.</div>
+      </div>
+    </div>
+
+    <div class="section" id="orchestrator">
+      <h2>🧠 Autonomous Orchestrator</h2>
+      <div class="grid">
+        <div class="card">
+          <strong>roc-ai orchestrator</strong><br>
+          <span style="font-size:13px;color:#64748b">Full autonomous loop in containers</span>
+          <div class="terminal" style="margin-top:12px;font-size:12px">
+            roc-ai orchestrator "Build Xloud SaaS with multi-provider agents"
+          </div>
+        </div>
+        <div class="card">
+          <strong>roc-agent / hermes orchestrator</strong><br>
+          <span style="font-size:13px;color:#64748b">Patched Hermes binary (AIS-DEV native)</span>
+          <div style="margin-top:16px">
+            <a href="#" onclick="copyCmd(this)" class="btn btn-ghost" style="padding:8px 14px;font-size:12px">Copy command</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" id="providers">
+      <h2>🌐 First-Class Providers</h2>
+      <div class="grid">
+        <div class="card"><strong>AIS-DEV</strong><br><span class="badge">gemini-2.5-flash</span><br>Fast + high-thinking • Google AI Studio applet</div>
+        <div class="card"><strong>Gateway</strong><br><span class="badge">primary</span><br>ai.roadfx.biz.id + gateway.roadfx.biz.id</div>
+        <div class="card"><strong>Groq + OpenRouter</strong><br>Ultra-fast + frontier models</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function copyCmd(el) {
+      navigator.clipboard.writeText("roc-ai orchestrator \"Your autonomous task here\"");
+      el.textContent = "Copied!";
+      setTimeout(() => el.textContent = "Copy command", 1400);
+    }
+    // Simple active nav
+    document.querySelectorAll('.nav a').forEach(a => {
+      a.addEventListener('click', () => {
+        document.querySelectorAll('.nav a').forEach(x => x.classList.remove('active'));
+        a.classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>

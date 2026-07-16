@@ -11,17 +11,19 @@
     "cli"
   ],
   "scripts": {
-    "build": "turbo build",
+    "build": "npm run build:gateway && npm run build:site",
+    "build:gateway": "node scripts/build-gateway.mjs",
+    "build:site": "node scripts/build-site.mjs",
     "dev": "turbo dev",
     "lint": "turbo lint",
-    "deploy": "turbo deploy",
-    "deploy:site": "npm run deploy -w workers/site",
-    "deploy:gateway": "npm run deploy -w workers/gateway",
+    "deploy": "npm run deploy:gateway && npm run deploy:site",
+    "deploy:site": "node scripts/deploy-worker.mjs site --esm",
+    "deploy:gateway": "node scripts/deploy-worker.mjs gateway --esm",
     "deploy:auth": "npm run deploy -w workers/auth",
     "deploy:ai": "npm run deploy -w workers/ai",
     "deploy:webhook": "npm run deploy -w workers/webhook",
     "deploy:r2": "npm run deploy -w workers/r2",
-    "deploy:all": "turbo deploy --filter=./workers/*"
+    "deploy:all": "npm run build && npm run deploy"
   },
   "devDependencies": {
     "turbo": "^2.5.0",

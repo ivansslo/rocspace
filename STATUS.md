@@ -69,4 +69,15 @@
 4. Configure SSL/HTTPS on Oracle VM
 5. Get CF Zone/DNS token
 6. Migrate CloudRun to rocspace monorepo
-7. Rekonversi gateway/src/ ke proper TypeScript
+7. Rekonversi gateway/src ke proper TypeScript ✅ **DONE (2026-07-16)**
+
+## 🆕 Recent Work (Agent Session 2026-07-16)
+
+- Cloned repo
+- Read & updated HANDOFF.md
+- Reconstructed `workers/gateway/src/` into **proper TypeScript modules** (index.ts, ai.ts, utils.ts, types.ts, clerk.ts, crawl.ts, logs.ts, solace.ts)
+- Added build scripts (`scripts/build-*.mjs`)
+- Updated `package.json` scripts for easy `npm run build` / `npm run deploy:gateway`
+- Gateway + Site successfully built (147KB + 27KB ESM)
+- Pages remain importable as text via esbuild loader
+- Source now maintainable (no more bundled JS)
