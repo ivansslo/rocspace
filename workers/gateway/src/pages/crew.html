@@ -1,10 +1,9 @@
-// workers/gateway/src/pages/crew.html
-var crew_default = `<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>CrewAI \u2014 Solace Hermes</title>
+<title>CrewAI — Solace Hermes</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:system-ui,sans-serif;background:#09090b;color:#fafafa;min-height:100dvh;display:flex;justify-content:center}
@@ -121,7 +120,7 @@ body{font-family:system-ui,sans-serif;background:#09090b;color:#fafafa;min-heigh
 
 <div class="sc">&#128279; Connected</div>
 <div class="links">
-<a class="lk" href="https://hermes-cloudflare.certveis.workers.dev/chat-live" target="_blank"><span class="ic">\u{1F4AC}</span><div class="in"><h3>Hermes Chat-Live</h3><p>Multi-model AI chat with streaming</p></div><span class="ar">&#8250;</span></a>
+<a class="lk" href="https://hermes-cloudflare.certveis.workers.dev/chat-live" target="_blank"><span class="ic">💬</span><div class="in"><h3>Hermes Chat-Live</h3><p>Multi-model AI chat with streaming</p></div><span class="ar">&#8250;</span></a>
 <a class="lk" href="https://hermes-cloudflare.certveis.workers.dev/solace/status" target="_blank"><span class="ic">&#128225;</span><div class="in"><h3>Solace Event Mesh</h3><p>RoClace Cluster &#183; Singapore &#183; 5 queues</p></div><span class="ar">&#8250;</span></a>
 <a class="lk" href="https://rocspace-links.certveis.workers.dev" target="_blank"><span class="ic">&#128279;</span><div class="in"><h3>AI Agent Hub</h3><p>All integrations &#183; 77 models &#183; 1019 tools</p></div><span class="ar">&#8250;</span></a>
 <a class="lk" href="https://github.com/ivansslo/Solace-Hermes-Project" target="_blank"><span class="ic">&#128025;</span><div class="in"><h3>GitHub</h3><p>ivansslo/Solace-Hermes-Project</p></div><span class="ar">&#8250;</span></a>
@@ -138,7 +137,7 @@ async function runCrew(){
   var btn=document.getElementById('runBtn');
   var res=document.getElementById('result');
   btn.disabled=true;btn.textContent='Running...';
-  res.className='on';res.textContent='Sending to Hermes Gateway \u2192 CrewAI agents...\\\\n\\\\nResearcher \u2192 Analyst \u2192 Writer\\\\nPlease wait...\\\\n';
+  res.className='on';res.textContent='Sending to Hermes Gateway → CrewAI agents...\\n\\nResearcher → Analyst → Writer\\nPlease wait...\\n';
   try{
     var r=await fetch('https://hermes-cloudflare.certveis.workers.dev/solace/task',{
       method:'POST',
@@ -153,8 +152,6 @@ async function runCrew(){
   }
   btn.disabled=false;btn.textContent='Run';
 }
-<\/script>
+</script>
 </body>
 </html>
-`;
-

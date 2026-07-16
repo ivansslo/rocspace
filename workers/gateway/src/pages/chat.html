@@ -1,5 +1,4 @@
-// workers/gateway/src/pages/chat.html
-var chat_default = `<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
@@ -41,15 +40,15 @@ var chat_default = `<!DOCTYPE html>
     const token = credential ? credential.accessToken : null;
     return { user: result.user, token: token };
   };
-<\/script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"><\/script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"><\/script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-jsx.min.js"><\/script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-tsx.min.js"><\/script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"><\/script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"><\/script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"><\/script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"><\/script>
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-jsx.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-tsx.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
 <style>
 *{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden}button,input,textarea,select{font:inherit}
 :root{color-scheme:dark;--bg:#08090d;--bg2:#0d1117;--panel:#10151f;--panel2:#151b26;--elev:#1a2230;--border:#273244;--text:#f8fafc;--muted:#94a3b8;--soft:#cbd5e1;--accent:#4f8cff;--accent2:#8b5cf6;--good:#22c55e;--warn:#f59e0b;--bad:#ef4444;--code:#05070b;--shadow:0 24px 80px rgba(0,0,0,.35);--radius:18px;--fs:14px}
@@ -143,7 +142,7 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
 <div id="authGateway" class="auth-gateway">
   <div class="auth-card">
     <div class="auth-header">
-      <div style="font-size: 38px; margin-bottom: 10px;">\u26A1</div>
+      <div style="font-size: 38px; margin-bottom: 10px;">⚡</div>
       <h1>Solace Hermes Gateway</h1>
       <p>Masuk menggunakan Token atau unggah ZIP Kredensial</p>
     </div>
@@ -158,40 +157,40 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
     <div style="text-align: center; color: var(--muted); font-size: 12px; margin: 5px 0;">atau</div>
     
     <div class="zip-zone" id="zipZone">
-      <h4>\u{1F4E6} Ekstrak ZIP Kredensial</h4>
+      <h4>📦 Ekstrak ZIP Kredensial</h4>
       <p>Drop file .zip di sini atau klik untuk memilih file</p>
       <input type="file" id="zipFileInput" accept=".zip" style="display: none;">
     </div>
     <div id="zipStatus" style="font-size: 12px; color: var(--muted); text-align: center; margin-top: -5px; display: none;"></div>
 
     <div style="border-top: 1px solid var(--border); padding-top: 15px; display: flex; flex-direction: column; gap: 8px;">
-      <button class="secondary" id="clerkLoginAuth" style="padding: 10px; font-size: 13px;">\u{1F464} Social Login via Clerk</button>
+      <button class="secondary" id="clerkLoginAuth" style="padding: 10px; font-size: 13px;">👤 Social Login via Clerk</button>
     </div>
   </div>
 </div>
 <div class="app">
   <aside class="sidebar" id="sidebar">
-    <div class="brand"><div class="logo">\u26A1</div><div><h1>Solace Hermes</h1><p>Codex-style mobile AI hub</p></div><span class="status-dot" id="liveDot"></span></div>
-    <button class="new-chat" id="newChat">\uFF0B New Chat</button>
+    <div class="brand"><div class="logo">⚡</div><div><h1>Solace Hermes</h1><p>Codex-style mobile AI hub</p></div><span class="status-dot" id="liveDot"></span></div>
+    <button class="new-chat" id="newChat">＋ New Chat</button>
     <nav class="nav" id="nav">
-      <a href="/dashboard"><span class="ico">\u{1F3E0}</span><span>Realtime Dashboard</span></a>
-      <a data-view="chat" href="/chat-live" class="active"><span class="ico">\u{1F4AC}</span><span>Chat-Live</span></a>
-      <a data-view="coding" href="/chat-live#coding"><span class="ico">\u2318</span><span>AI Coding</span></a>
-      <a href="/crawl4ai"><span class="ico">\u{1F577}\uFE0F</span><span>Crawl4AI Page</span></a>
-      <a href="/crew"><span class="ico">\u{1F916}</span><span>CrewAI Page</span></a>
-      <a href="https://rocspace-links.certveis.workers.dev" target="_blank" rel="noopener"><span class="ico">\u{1F517}</span><span>Links Hub</span></a>
-      <a href="/integrations" target="_blank"><span class="ico">\u{1F9E9}</span><span>Integrations JSON</span></a>
-      <a href="/solace/status" target="_blank"><span class="ico">\u{1F4E1}</span><span>Solace Status</span></a>
-      <a href="/zapier"><span class="ico">\u26A1</span><span>Zapier Template</span></a>
-      <a href="/logs"><span class="ico">\u{1F4DC}</span><span>Activity Logs</span></a>
-      <a data-view="drive" href="/chat-live#drive"><span class="ico">\u{1F4C1}</span><span>Google Drive</span></a>
-      <a data-view="settings" href="/chat-live#settings"><span class="ico">\u2699\uFE0F</span><span>Settings</span></a>
-      <a data-view="profile" href="/chat-live#profile"><span class="ico">\u{1F464}</span><span>Profile</span></a>
+      <a href="/dashboard"><span class="ico">🏠</span><span>Realtime Dashboard</span></a>
+      <a data-view="chat" href="/chat-live" class="active"><span class="ico">💬</span><span>Chat-Live</span></a>
+      <a data-view="coding" href="/chat-live#coding"><span class="ico">⌘</span><span>AI Coding</span></a>
+      <a href="/crawl4ai"><span class="ico">🕷️</span><span>Crawl4AI Page</span></a>
+      <a href="/crew"><span class="ico">🤖</span><span>CrewAI Page</span></a>
+      <a href="https://rocspace-links.certveis.workers.dev" target="_blank" rel="noopener"><span class="ico">🔗</span><span>Links Hub</span></a>
+      <a href="/integrations" target="_blank"><span class="ico">🧩</span><span>Integrations JSON</span></a>
+      <a href="/solace/status" target="_blank"><span class="ico">📡</span><span>Solace Status</span></a>
+      <a href="/zapier"><span class="ico">⚡</span><span>Zapier Template</span></a>
+      <a href="/logs"><span class="ico">📜</span><span>Activity Logs</span></a>
+      <a data-view="drive" href="/chat-live#drive"><span class="ico">📁</span><span>Google Drive</span></a>
+      <a data-view="settings" href="/chat-live#settings"><span class="ico">⚙️</span><span>Settings</span></a>
+      <a data-view="profile" href="/chat-live#profile"><span class="ico">👤</span><span>Profile</span></a>
     </nav>
-    <div class="side-foot"><div class="mini-card"><b>Command cepat</b><span>/crawl URL \xB7 /code task \xB7 /crew topic \xB7 /help</span></div><div class="mini-card"><b>Theme</b><span>System, dark, light + ukuran font</span></div></div>
+    <div class="side-foot"><div class="mini-card"><b>Command cepat</b><span>/crawl URL xB7 /code task xB7 /crew topic xB7 /help</span></div><div class="mini-card"><b>Theme</b><span>System, dark, light + ukuran font</span></div></div>
   </aside>
   <section class="layout">
-    <header class="topbar"><button class="icon-btn menu-btn" id="menuBtn">\u2630</button><div class="title"><h2 id="viewTitle">Chat-Live</h2><p id="viewDesc">Tanya AI, crawl URL, jalankan chat live, dan tools dari satu halaman.</p></div><div class="spacer"></div><select class="select" id="model"><option value="llama-3.3-70b-versatile">\u26A1 Llama 3.3 70B</option><option value="llama-3.1-8b-instant">\u{1F680} Llama 8B Fast</option><option value="qwen/qwen3-32b">\u{1F9E0} Qwen3 32B</option><option value="qwen/qwen3-235b-a22b">\u{1F3C6} Qwen3 235B</option><option value="qwen/qwen3.6-27b">\u{1F52C} Qwen3.6 27B</option><option value="openai/gpt-4o">\u{1F48E} GPT-4o</option><option value="openai/gpt-oss-120b">\u{1F9BE} GPT-OSS 120B</option><option value="deepseek/deepseek-r1">\u{1F52E} DeepSeek R1</option><option value="meta-llama/llama-4-scout-17b-16e-instruct">\u{1F441}\uFE0F Scout Vision</option><option value="google/gemini-2.5-flash">\u2728 Gemini 2.5 Flash</option><option value="google/gemini-2.5-pro-preview">\u{1F31F} Gemini 2.5 Pro</option></select><button class="icon-btn" id="themeBtn">\u{1F313}</button></header>
+    <header class="topbar"><button class="icon-btn menu-btn" id="menuBtn">☰</button><div class="title"><h2 id="viewTitle">Chat-Live</h2><p id="viewDesc">Tanya AI, crawl URL, jalankan chat live, dan tools dari satu halaman.</p></div><div class="spacer"></div><select class="select" id="model"><option value="llama-3.3-70b-versatile">⚡ Llama 3.3 70B</option><option value="llama-3.1-8b-instant">🚀 Llama 8B Fast</option><option value="qwen/qwen3-32b">🧠 Qwen3 32B</option><option value="qwen/qwen3-235b-a22b">🏆 Qwen3 235B</option><option value="qwen/qwen3.6-27b">🔬 Qwen3.6 27B</option><option value="openai/gpt-4o">💎 GPT-4o</option><option value="openai/gpt-oss-120b">🦾 GPT-OSS 120B</option><option value="deepseek/deepseek-r1">🔮 DeepSeek R1</option><option value="meta-llama/llama-4-scout-17b-16e-instruct">👁️ Scout Vision</option><option value="google/gemini-2.5-flash">✨ Gemini 2.5 Flash</option><option value="google/gemini-2.5-pro-preview">🌟 Gemini 2.5 Pro</option></select><button class="icon-btn" id="themeBtn">🌓</button></header>
     <main class="main">
       <section class="view chat-view active" id="view-chat"><div class="messages" id="messages"></div></section>
       <section class="view" id="view-coding">
@@ -202,7 +201,7 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
               <div class="files-search-row">
                 <input id="fileSearch" class="pill" placeholder="Cari file..." oninput="renderFiles()" style="width:100%;font-size:12px;">
               </div>
-              <button class="secondary" id="newFile" style="width:100%;margin-top:4px;font-size:12px;padding:8px;">\uFF0B File Baru</button>
+              <button class="secondary" id="newFile" style="width:100%;margin-top:4px;font-size:12px;padding:8px;">＋ File Baru</button>
             </div>
             <div class="file-list-container" id="fileList"></div>
           </aside>
@@ -210,13 +209,13 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
           <div class="editor">
             <div class="editor-head">
               <div class="editor-tab">
-                <span id="tabIcon">\u{1F4C4}</span>
+                <span id="tabIcon">📄</span>
                 <input id="fileName" value="app.js" spellcheck="false">
               </div>
               <div class="spacer"></div>
-              <button class="secondary" id="copyCodeBtn" style="font-size:12px;padding:6px 12px;" title="Copy Code">\u{1F4CB} Copy</button>
+              <button class="secondary" id="copyCodeBtn" style="font-size:12px;padding:6px 12px;" title="Copy Code">📋 Copy</button>
               <button class="secondary" id="saveFile" style="font-size:12px;padding:6px 12px;">Save</button>
-              <button class="secondary" id="toggleCopilotBtn" style="font-size:12px;padding:6px 12px;">\u{1F916} Copilot</button>
+              <button class="secondary" id="toggleCopilotBtn" style="font-size:12px;padding:6px 12px;">🤖 Copilot</button>
               <button class="primary" id="askCode" style="font-size:12px;padding:6px 12px;">Generate</button>
             </div>
             <div class="editor-body">
@@ -230,7 +229,7 @@ function helloHermes(){
             </div>
             <div class="editor-status">
               <div class="status-item" id="editorCursor">Ln 1, Col 1</div>
-              <div class="status-item" id="editorStats">0 ch \xB7 1 lines</div>
+              <div class="status-item" id="editorStats">0 ch xB7 1 lines</div>
               <div class="status-item" id="editorLang">JAVASCRIPT</div>
             </div>
             <div class="editor-foot">
@@ -241,7 +240,7 @@ function helloHermes(){
           
           <aside class="copilot-panel" id="copilotPanel">
             <div class="copilot-head">
-              <h3>\u{1F916} AI Copilot</h3>
+              <h3>🤖 AI Copilot</h3>
               <span class="badge" id="copilotModelBadge" style="margin-bottom:0;font-size:10px;">Model Ready</span>
             </div>
             <div class="copilot-body" id="copilotChatBody">
@@ -249,28 +248,28 @@ function helloHermes(){
             </div>
             <div class="copilot-foot">
               <div class="copilot-chips">
-                <span class="copilot-chip" onclick="runCopilotChip('Optimalkan kode ini agar lebih efisien dan rapi')">\u26A1 Optimalkan</span>
-                <span class="copilot-chip" onclick="runCopilotChip('Cari bug, error, atau celah keamanan di kode ini')">\u{1F50D} Cari Bug</span>
-                <span class="copilot-chip" onclick="runCopilotChip('Jelaskan cara kerja kode ini secara detail')">\u{1F4DD} Jelaskan</span>
-                <span class="copilot-chip" onclick="runCopilotChip('Refactor kode ini agar lebih bersih dan modular')">\u{1F6E0} Refactor</span>
+                <span class="copilot-chip" onclick="runCopilotChip('Optimalkan kode ini agar lebih efisien dan rapi')">⚡ Optimalkan</span>
+                <span class="copilot-chip" onclick="runCopilotChip('Cari bug, error, atau celah keamanan di kode ini')">🔍 Cari Bug</span>
+                <span class="copilot-chip" onclick="runCopilotChip('Jelaskan cara kerja kode ini secara detail')">📝 Jelaskan</span>
+                <span class="copilot-chip" onclick="runCopilotChip('Refactor kode ini agar lebih bersih dan modular')">🛠 Refactor</span>
               </div>
               <div class="copilot-input-row">
                 <input id="copilotInput" class="copilot-input" placeholder="Tanya Copilot..." onkeydown="if(event.key==='Enter')sendCopilot()">
-                <button class="copilot-send" id="sendCopilotBtn" onclick="sendCopilot()">\u27A4</button>
+                <button class="copilot-send" id="sendCopilotBtn" onclick="sendCopilot()">➤</button>
               </div>
             </div>
           </aside>
         </div>
       </section>
-      <section class="view" id="view-crawl"><div class="page"><h2>\u{1F577}\uFE0F Crawl4AI</h2><p>Status: endpoint tersedia di gateway. Gunakan form ini atau command <b>/crawl https://contoh.com</b> di chat.</p><div class="two"><div class="card form"><label>URL</label><input id="crawlUrl" placeholder="https://example.com"><label>Mode</label><select id="crawlMode"><option value="crawl4ai">Crawl4AI markdown cleaner</option><option value="crawl">Simple crawl text</option><option value="extract">Extract JSON-LD/OpenGraph</option></select><label>Max length</label><input id="crawlMax" type="number" value="50000"><button class="primary" id="runCrawl">Run Crawl</button></div><pre class="output" id="crawlOutput">Hasil crawl akan muncul di sini.</pre></div></div></section>
-      <section class="view" id="view-crew"><div class="page"><h2>\u{1F916} CrewAI</h2><p>Jalankan task agent berurutan lewat Solace task endpoint.</p><div class="card form"><input id="crewTopic" value="AI agents in 2026"><button class="primary" id="runCrew">Run Crew</button><pre class="output" id="crewOutput">Researcher \u2192 Analyst \u2192 Writer</pre></div></div></section>
-      <section class="view" id="view-links"><div class="page"><h2>\u{1F517} Links Hub</h2><p>Sidebar untuk menu page link: Apps, Tools, Skills, dan ClawHub.</p><div class="quick"><button class="secondary" data-link="integrations">Apps</button><button class="secondary" data-link="tools">Tools</button><button class="secondary" data-link="skills">Skills</button><button class="secondary" data-link="hub/plugins">Hub Plugins</button></div><div class="grid" id="linksGrid"></div></div></section>
-      <section class="view" id="view-solace"><div class="page"><h2>\u{1F4E1} Solace Status</h2><p>Monitor broker, queues, dan service.</p><div class="quick"><button class="primary" id="refreshSolace">Refresh</button></div><pre class="output" id="solaceOutput">Klik Refresh untuk cek status.</pre></div></section>
-      <section class="view" id="view-settings"><div class="page"><h2>\u2699\uFE0F Settings</h2><p>Tema bawaan sudah tersedia: System, Dark, Light.</p><div class="two"><div class="card form"><label>Theme</label><select id="themeSelect"><option value="system">System</option><option value="dark">Dark</option><option value="light">Light</option></select><label>Font size</label><select id="fontSelect"><option value="13px">Small</option><option value="14px">Normal</option><option value="16px">Large</option></select><label>Gateway API URL</label><input id="apiUrl" placeholder="kosong = current origin"><label>Bearer token</label><input id="tokenInput" type="password" placeholder="Worker token"><button class="primary" id="saveSettings">Save Settings</button><button class="secondary" id="logoutBtn" style="margin-top: 8px; border-color: var(--bad); color: var(--bad);">\u{1F6AA} Logout / Reset Kredensial</button></div><div class="card"><h3>Catatan keamanan</h3><p style="color:var(--muted);line-height:1.6">Untuk production, simpan token di Cloudflare Worker Secrets dan gunakan auth session. UI ini mendukung token via localStorage agar tidak perlu hardcode di file.</p></div></div></div></section>
-      <section class="view" id="view-profile"><div class="page"><h2>\u{1F464} Profile</h2><p>Clerk auth + Zapier connected. Login sosial GitHub, GitLab, Google, HuggingFace, Linear, LinkedIn, Notion, X.</p><div class="card"><h3>Identity</h3><p id="profileId" style="color:var(--muted)"></p><div class="quick"><button class="primary" id="clerkLogin">Login with Clerk</button><button class="secondary" id="clerkProfile">Open Profile</button><a class="secondary" href="/zapier" style="text-decoration:none">Zapier Template</a></div><pre class="output" id="clerkStatus">Clerk status loading...</pre></div></div></section>
+      <section class="view" id="view-crawl"><div class="page"><h2>🕷️ Crawl4AI</h2><p>Status: endpoint tersedia di gateway. Gunakan form ini atau command <b>/crawl https://contoh.com</b> di chat.</p><div class="two"><div class="card form"><label>URL</label><input id="crawlUrl" placeholder="https://example.com"><label>Mode</label><select id="crawlMode"><option value="crawl4ai">Crawl4AI markdown cleaner</option><option value="crawl">Simple crawl text</option><option value="extract">Extract JSON-LD/OpenGraph</option></select><label>Max length</label><input id="crawlMax" type="number" value="50000"><button class="primary" id="runCrawl">Run Crawl</button></div><pre class="output" id="crawlOutput">Hasil crawl akan muncul di sini.</pre></div></div></section>
+      <section class="view" id="view-crew"><div class="page"><h2>🤖 CrewAI</h2><p>Jalankan task agent berurutan lewat Solace task endpoint.</p><div class="card form"><input id="crewTopic" value="AI agents in 2026"><button class="primary" id="runCrew">Run Crew</button><pre class="output" id="crewOutput">Researcher → Analyst → Writer</pre></div></div></section>
+      <section class="view" id="view-links"><div class="page"><h2>🔗 Links Hub</h2><p>Sidebar untuk menu page link: Apps, Tools, Skills, dan ClawHub.</p><div class="quick"><button class="secondary" data-link="integrations">Apps</button><button class="secondary" data-link="tools">Tools</button><button class="secondary" data-link="skills">Skills</button><button class="secondary" data-link="hub/plugins">Hub Plugins</button></div><div class="grid" id="linksGrid"></div></div></section>
+      <section class="view" id="view-solace"><div class="page"><h2>📡 Solace Status</h2><p>Monitor broker, queues, dan service.</p><div class="quick"><button class="primary" id="refreshSolace">Refresh</button></div><pre class="output" id="solaceOutput">Klik Refresh untuk cek status.</pre></div></section>
+      <section class="view" id="view-settings"><div class="page"><h2>⚙️ Settings</h2><p>Tema bawaan sudah tersedia: System, Dark, Light.</p><div class="two"><div class="card form"><label>Theme</label><select id="themeSelect"><option value="system">System</option><option value="dark">Dark</option><option value="light">Light</option></select><label>Font size</label><select id="fontSelect"><option value="13px">Small</option><option value="14px">Normal</option><option value="16px">Large</option></select><label>Gateway API URL</label><input id="apiUrl" placeholder="kosong = current origin"><label>Bearer token</label><input id="tokenInput" type="password" placeholder="Worker token"><button class="primary" id="saveSettings">Save Settings</button><button class="secondary" id="logoutBtn" style="margin-top: 8px; border-color: var(--bad); color: var(--bad);">🚪 Logout / Reset Kredensial</button></div><div class="card"><h3>Catatan keamanan</h3><p style="color:var(--muted);line-height:1.6">Untuk production, simpan token di Cloudflare Worker Secrets dan gunakan auth session. UI ini mendukung token via localStorage agar tidak perlu hardcode di file.</p></div></div></div></section>
+      <section class="view" id="view-profile"><div class="page"><h2>👤 Profile</h2><p>Clerk auth + Zapier connected. Login sosial GitHub, GitLab, Google, HuggingFace, Linear, LinkedIn, Notion, X.</p><div class="card"><h3>Identity</h3><p id="profileId" style="color:var(--muted)"></p><div class="quick"><button class="primary" id="clerkLogin">Login with Clerk</button><button class="secondary" id="clerkProfile">Open Profile</button><a class="secondary" href="/zapier" style="text-decoration:none">Zapier Template</a></div><pre class="output" id="clerkStatus">Clerk status loading...</pre></div></div></section>
       <section class="view" id="view-drive">
         <div class="page">
-          <h2>\u{1F4C1} Google Drive Workspace</h2>
+          <h2>📁 Google Drive Workspace</h2>
           <p>Tarik file credential atau konfigurasi rahasia dari folder <b>Projectsecrets</b> di Google Drive Anda langsung ke workspace coding.</p>
           
           <div class="two">
@@ -304,8 +303,8 @@ function helloHermes(){
                   <span>Status: Terkoneksi</span>
                 </div>
                 <div style="display:flex; gap:8px;">
-                  <button class="primary" id="scanDriveBtn">\u{1F504} Scan Folder Projectsecrets</button>
-                  <button class="secondary" id="driveLogoutBtn" style="border-color:var(--bad); color:var(--bad);">\u{1F6AA} Disconnect</button>
+                  <button class="primary" id="scanDriveBtn">🔄 Scan Folder Projectsecrets</button>
+                  <button class="secondary" id="driveLogoutBtn" style="border-color:var(--bad); color:var(--bad);">🚪 Disconnect</button>
                 </div>
               </div>
             </div>
@@ -314,7 +313,7 @@ function helloHermes(){
               <h3>Files inside folder Projectsecrets</h3>
               <div id="driveFilesStatus" style="color:var(--muted); margin: 12px 0;">Silakan hubungkan akun Google Anda terlebih dahulu.</div>
               <div id="driveActionsArea" style="display:none; margin-bottom:12px;">
-                <button class="primary" id="importAllDriveBtn" style="font-size:12px;">\u{1F4E5} Import All Files to Workspace</button>
+                <button class="primary" id="importAllDriveBtn" style="font-size:12px;">📥 Import All Files to Workspace</button>
               </div>
               <div id="driveFileList" style="display:flex; flex-direction:column; gap:8px; max-height: 400px; overflow-y: auto;">
                 <!-- Files loaded from Google Drive go here -->
@@ -324,15 +323,15 @@ function helloHermes(){
         </div>
       </section>
     </main>
-    <footer class="composer"><div class="cmds"><button data-cmd="/help">/help</button><button data-cmd="/crawl https://">/crawl URL</button><button data-cmd="/code ">/code</button><button data-cmd="/crew ">/crew</button><button data-cmd="/exec ">/exec</button><button data-cmd="Jelaskan fungsi page chat ini">fungsi page chat</button></div><div class="input-row"><textarea id="input" rows="1" placeholder="Message... /crawl https://url, /code buat UI, /crew topic, /exec tool_name"></textarea><button class="send" id="send">\u27A4</button></div></footer>
+    <footer class="composer"><div class="cmds"><button data-cmd="/help">/help</button><button data-cmd="/crawl https://">/crawl URL</button><button data-cmd="/code ">/code</button><button data-cmd="/crew ">/crew</button><button data-cmd="/exec ">/exec</button><button data-cmd="Jelaskan fungsi page chat ini">fungsi page chat</button></div><div class="input-row"><textarea id="input" rows="1" placeholder="Message... /crawl https://url, /code buat UI, /crew topic, /exec tool_name"></textarea><button class="send" id="send">➤</button></div></footer>
   </section>
 </div>
-<div class="mobile-tabs" id="mobileTabs"><a href="/dashboard">\u{1F3E0}</a><a data-view="chat" href="/chat-live" class="active">\u{1F4AC}</a><a data-view="coding" href="/chat-live#coding">\u2318</a><a href="/crawl4ai">\u{1F577}\uFE0F</a><a href="/crew">\u{1F916}</a><a href="/logs">\u{1F4DC}</a><a href="https://rocspace-links.certveis.workers.dev" target="_blank" rel="noopener">\u{1F517}</a><a data-view="settings" href="/chat-live#settings">\u2699\uFE0F</a></div>
+<div class="mobile-tabs" id="mobileTabs"><a href="/dashboard">🏠</a><a data-view="chat" href="/chat-live" class="active">💬</a><a data-view="coding" href="/chat-live#coding">⌘</a><a href="/crawl4ai">🕷️</a><a href="/crew">🤖</a><a href="/logs">📜</a><a href="https://rocspace-links.certveis.workers.dev" target="_blank" rel="noopener">🔗</a><a data-view="settings" href="/chat-live#settings">⚙️</a></div>
 <div class="toast" id="toast"></div>
 <script>
 var DEFAULT_TOKEN='';
 var API_DEFAULT='';
-var state={view:'chat',messages:[],files:{'app.js':'// AI Coding workspace\\\\nfunction helloHermes(){\\\\n  return "Build UI like codex-mobile-web";\\\\n}\\\\n'},currentFile:'app.js'};
+var state={view:'chat',messages:[],files:{'app.js':'// AI Coding workspace\\nfunction helloHermes(){\\n  return "Build UI like codex-mobile-web";\\n}\\n'},currentFile:'app.js'};
 var titles={chat:['Chat-Live','Tanya AI, crawl URL, jalankan chat live, dan tools dari satu halaman.'],coding:['AI Coding','Editor mini untuk generate, edit, dan simpan file lokal.'],crawl:['Crawl4AI','Crawl URL menjadi markdown/text lalu kirim ke chat.'],crew:['CrewAI','Jalankan workflow agent.'],links:['Links Hub','Menu page link untuk Apps, Tools, Skills, Hub.'],solace:['Solace Status','Monitor event mesh dan queues.'],settings:['Settings','Theme system/dark/light, font, API, token.'],profile:['Profile','Identitas user dan slot Clerk auth.'],drive:['Google Drive','Koneksi ke Google Drive untuk mengambil file di folder Projectsecrets.']};
 function $(id){return document.getElementById(id)}function api(){return localStorage.getItem('hermes_api')||API_DEFAULT}function token(ask){var t=localStorage.getItem('hermes_token')||DEFAULT_TOKEN;if(!t&&ask!==false){showAuthGateway()}return t}
 function showAuthGateway(){$('authGateway').style.display='flex'}
@@ -370,7 +369,7 @@ async function handleZipUpload(file){
     var data=await res.json();
     if(res.ok&&data.success){
       status.style.color='var(--good)';
-      status.textContent='\u2705 Berhasil diekstrak!';
+      status.textContent='✅ Berhasil diekstrak!';
       toast('ZIP Kredensial berhasil diekstrak!');
       setTimeout(function(){location.reload()},1500);
     }else{
@@ -389,20 +388,20 @@ function getUid(){var u=localStorage.getItem('hermes_uid');if(!u){u='user-'+Date
 function nav(v){clientLog('ui.nav',{view:v});state.view=v;document.querySelectorAll('[data-view]').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-view')===v)});document.querySelectorAll('.view').forEach(function(x){x.classList.remove('active')});$('view-'+v).classList.add('active');$('viewTitle').textContent=titles[v][0];$('viewDesc').textContent=titles[v][1];$('sidebar').classList.remove('open');if(v==='links')loadLinks('integrations')}
 function escapeHtml(s){return String(s).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})}
 function renderMessages(){var box=$('messages');box.innerHTML='';if(!state.messages.length){box.appendChild(welcomeNode());return}state.messages.forEach(function(m){var d=document.createElement('div');d.className='msg '+m.role;d.innerHTML=(m.badge?'<span class="badge">'+m.badge+'</span>':'')+format(m.content);box.appendChild(d)});box.scrollTop=box.scrollHeight}
-function welcomeNode(){var w=document.createElement('div');w.className='welcome';w.innerHTML='<div class="hero"><div class="hero-card"><span class="badge">\u2728 Solace Hermes v15.4</span><h2>AI Agent Hub: Chat, CrewAI, Crawl4AI, Solace, dan integrasi aktif.</h2><p>Dashboard ini berisi keterangan fungsi dan koneksi semua komponen: Cloudflare Workers, Chat, CrewAI Termux, Zapier, CF AI Factory, Clerk, Notion/ClawLink, Crawl4AI, domain certveis.space, GitHub/GitLab, dan Termux CLI.</p><div class="quick"><a class="secondary" href="/dashboard" style="text-decoration:none">Dashboard</a><button data-go="chat">Chat</button><button data-go="crew">CrewAI</button><button data-go="crawl">Crawl4AI</button><button data-go="links">Hub</button><button data-go="solace">Solace</button></div></div><div class="hero-card"><div class="stats"><div class="stat"><b>5</b><span>CF Workers</span></div><div class="stat"><b>25+</b><span>Endpoints</span></div><div class="stat"><b>20</b><span>Integrations</span></div><div class="stat"><b>9</b><span>Domains</span></div></div></div></div><div class="grid"><div class="feature" data-go="chat"><div class="big">\u{1F4AC}</div><h3>Chat</h3><p>12 models, 3 modes, Clerk auth slot, streaming, command /crawl /code /crew.</p></div><div class="feature" data-go="solace"><div class="big">\u{1F4E1}</div><h3>Solace</h3><p>Event mesh connected, 5 queues, Singapore RoClace cluster.</p></div><div class="feature" data-go="crew"><div class="big">\u{1F916}</div><h3>CrewAI</h3><p>v1.15.1 running di Termux, workflow Researcher \u2192 Analyst \u2192 Writer.</p></div><div class="feature" data-go="chat"><div class="big">\u26A1</div><h3>Zapier</h3><p>Connected ke CrewAI dan webhook endpoint /webhook/zapier.</p></div><div class="feature" data-go="links"><div class="big">\u{1F3A8}</div><h3>CF AI Factory</h3><p>60 public models untuk chat, image, TTS, STT, embeddings, translate, vision.</p></div><div class="feature" data-go="profile"><div class="big">\u{1F510}</div><h3>Clerk</h3><p>8 social logins: GitHub, GitLab, Google, HuggingFace, Linear, LinkedIn, Notion, X.</p></div><div class="feature" data-go="links"><div class="big">\u{1F4DD}</div><h3>Notion</h3><p>45 tools via ClawLink, siap dipanggil dari Links Hub/tool execute.</p></div><div class="feature" data-go="crawl"><div class="big">\u{1F577}\uFE0F</div><h3>Crawl4AI</h3><p>/crawl4ai endpoint aktif dan command /crawl URL di chat.</p></div><div class="feature" data-go="links"><div class="big">\u{1F517}</div><h3>20 integrations</h3><p>ClawHub, ClawLink, Honcho, Solace, Zapier, Tailscale, Clerk dan lainnya.</p></div><div class="feature" data-go="settings"><div class="big">\u{1F310}</div><h3>9 domains</h3><p>certveis.space domains mapped untuk app, AI gateway, webhook, factory, hub.</p></div><div class="feature" data-go="coding"><div class="big">\u{1F4E6}</div><h3>4 repos synced</h3><p>Source GitHub + GitLab dengan UI, Worker, docs, dan scripts.</p></div><div class="feature" data-go="coding"><div class="big">\u{1F4F1}</div><h3>Termux CLI</h3><p>hermes run works; CrewAI dan CLI operasional dari Termux.</p></div></div>';setTimeout(function(){w.querySelectorAll('[data-go]').forEach(function(b){b.onclick=function(){nav(b.getAttribute('data-go'))}})},0);return w}
+function welcomeNode(){var w=document.createElement('div');w.className='welcome';w.innerHTML='<div class="hero"><div class="hero-card"><span class="badge">✨ Solace Hermes v15.4</span><h2>AI Agent Hub: Chat, CrewAI, Crawl4AI, Solace, dan integrasi aktif.</h2><p>Dashboard ini berisi keterangan fungsi dan koneksi semua komponen: Cloudflare Workers, Chat, CrewAI Termux, Zapier, CF AI Factory, Clerk, Notion/ClawLink, Crawl4AI, domain certveis.space, GitHub/GitLab, dan Termux CLI.</p><div class="quick"><a class="secondary" href="/dashboard" style="text-decoration:none">Dashboard</a><button data-go="chat">Chat</button><button data-go="crew">CrewAI</button><button data-go="crawl">Crawl4AI</button><button data-go="links">Hub</button><button data-go="solace">Solace</button></div></div><div class="hero-card"><div class="stats"><div class="stat"><b>5</b><span>CF Workers</span></div><div class="stat"><b>25+</b><span>Endpoints</span></div><div class="stat"><b>20</b><span>Integrations</span></div><div class="stat"><b>9</b><span>Domains</span></div></div></div></div><div class="grid"><div class="feature" data-go="chat"><div class="big">💬</div><h3>Chat</h3><p>12 models, 3 modes, Clerk auth slot, streaming, command /crawl /code /crew.</p></div><div class="feature" data-go="solace"><div class="big">📡</div><h3>Solace</h3><p>Event mesh connected, 5 queues, Singapore RoClace cluster.</p></div><div class="feature" data-go="crew"><div class="big">🤖</div><h3>CrewAI</h3><p>v1.15.1 running di Termux, workflow Researcher → Analyst → Writer.</p></div><div class="feature" data-go="chat"><div class="big">⚡</div><h3>Zapier</h3><p>Connected ke CrewAI dan webhook endpoint /webhook/zapier.</p></div><div class="feature" data-go="links"><div class="big">🎨</div><h3>CF AI Factory</h3><p>60 public models untuk chat, image, TTS, STT, embeddings, translate, vision.</p></div><div class="feature" data-go="profile"><div class="big">🔐</div><h3>Clerk</h3><p>8 social logins: GitHub, GitLab, Google, HuggingFace, Linear, LinkedIn, Notion, X.</p></div><div class="feature" data-go="links"><div class="big">📝</div><h3>Notion</h3><p>45 tools via ClawLink, siap dipanggil dari Links Hub/tool execute.</p></div><div class="feature" data-go="crawl"><div class="big">🕷️</div><h3>Crawl4AI</h3><p>/crawl4ai endpoint aktif dan command /crawl URL di chat.</p></div><div class="feature" data-go="links"><div class="big">🔗</div><h3>20 integrations</h3><p>ClawHub, ClawLink, Honcho, Solace, Zapier, Tailscale, Clerk dan lainnya.</p></div><div class="feature" data-go="settings"><div class="big">🌐</div><h3>9 domains</h3><p>certveis.space domains mapped untuk app, AI gateway, webhook, factory, hub.</p></div><div class="feature" data-go="coding"><div class="big">📦</div><h3>4 repos synced</h3><p>Source GitHub + GitLab dengan UI, Worker, docs, dan scripts.</p></div><div class="feature" data-go="coding"><div class="big">📱</div><h3>Termux CLI</h3><p>hermes run works; CrewAI dan CLI operasional dari Termux.</p></div></div>';setTimeout(function(){w.querySelectorAll('[data-go]').forEach(function(b){b.onclick=function(){nav(b.getAttribute('data-go'))}})},0);return w}
 function format(s){
   s=escapeHtml(s);
   // Support markdown code blocks in main chat
-  s=s.replace(/\\\\\\\`\\\\\\\`\\\\\\\`(\\\\\\\\w*)\\\\\\\\n([\\\\\\\\s\\\\\\\\S]*?)\\\\\\\\n\\\\\\\`\\\\\\\`\\\\\\\`/g, function(m, lang, code){
+  s=s.replace(/\\\`\\\`\\\`(\\\\w*)\\\\n([\\\\s\\\\S]*?)\\\\n\\\`\\\`\\\`/g, function(m, lang, code){
     var uniqId = 'code_' + Math.random().toString(36).substr(2, 9);
-    return '<div class="markdown-code-wrapper" style="position:relative;margin:8px 0;"><pre class="markdown-code" id="' + uniqId + '">' + code + '</pre><button class="btn-apply" onclick="applyCopilotCode(this, \\\\\\\\\\\\'\\\\' + uniqId + \\\\\\\\\\\\'\\\\')" style="position:absolute;right:8px;top:8px;padding:4px 10px;font-size:11px;">Apply to Code</button></div>';
+    return '<div class="markdown-code-wrapper" style="position:relative;margin:8px 0;"><pre class="markdown-code" id="' + uniqId + '">' + code + '</pre><button class="btn-apply" onclick="applyCopilotCode(this, \\\\\\'\\' + uniqId + \\\\\\'\\')" style="position:absolute;right:8px;top:8px;padding:4px 10px;font-size:11px;">Apply to Code</button></div>';
   });
-  s=s.replace(/\\\\\\\`([^\\\\\\\`]+)\\\\\\\`/g, '<code class="inline-code">$1</code>');
+  s=s.replace(/\\\`([^\\\`]+)\\\`/g, '<code class="inline-code">$1</code>');
   // Support clickable command pills inside the chat response
-  s=s.replace(/(^|\\\\s)(\\\\/(?:crawl|code|crew|exec|help)(?:\\\\s+[^\\\\s\\\\n<]+)*)/gi, function(m, space, cmd){
-    return space + "<button class=\\\\"cmd-pill\\\\" onclick=\\\\"executeChatCommand('" + cmd + "')\\\\">" + cmd + "</button>";
+  s=s.replace(/(^|\\s)(\\/(?:crawl|code|crew|exec|help)(?:\\s+[^\\s\\n<]+)*)/gi, function(m, space, cmd){
+    return space + "<button class=\\"cmd-pill\\" onclick=\\"executeChatCommand('" + cmd + "')\\">" + cmd + "</button>";
   });
-  s=s.replace(/\\\\\\\\n/g,'<br>');
+  s=s.replace(/\\\\n/g,'<br>');
   return s;
 }
 function executeChatCommand(cmd){
@@ -410,24 +409,24 @@ function executeChatCommand(cmd){
   send();
 }
 function add(role,content,badge){state.messages.push({role:role,content:content,badge:badge});renderMessages()}
-async function send(){var text=$('input').value.trim();clientLog('chat.send',{text:text.slice(0,120)});if(!text)return;$('input').value='';autoSize();add('user',text);if(text==='/help'){add('ai','Perintah:\\\\n/crawl https://url = crawl halaman\\\\n/code task = kirim task coding ke AI\\\\n/crew topic = jalankan crew task\\\\n/exec tool_name [json] = jalankan ClawLink tool\\\\nTema ada di Settings: System, Dark, Light.','Help');return}if(text.indexOf('/crawl ')===0){runCrawlFromChat(text.replace('/crawl ','').trim());return}if(text.indexOf('/code ')===0){nav('coding');$('codePrompt').value=text.replace('/code ','').trim();askCoding();return}if(text.indexOf('/crew ')===0){nav('crew');$('crewTopic').value=text.replace('/crew ','').trim();runCrew();return}if(text.indexOf('/exec ')===0){runExecFromChat(text.replace('/exec ','').trim());return}await aiChat(text)}
-async function aiChat(text){add('system','Thinking...');try{var msgs=state.messages.filter(function(m){return m.role==='user'||m.role==='ai'}).slice(-12).map(function(m){return{role:m.role==='ai'?'assistant':'user',content:m.content}});if(text && msgs.length>0 && msgs[msgs.length-1].role==='user'){msgs[msgs.length-1].content=text}var res=await fetch(api()+'/ai/stream',{method:'POST',headers:{'Authorization':'Bearer '+token(),'Content-Type':'application/json'},body:JSON.stringify({model:$('model').value,messages:msgs,max_tokens:4096,stream:true})});state.messages.pop();renderMessages();if(!res.ok){var er=await res.text();add('ai','Error '+res.status+': '+er,'Gateway');return}var full='';var reader=res.body.getReader();var dec=new TextDecoder();var buf='';add('ai','',$('model').value);while(true){var rv=await reader.read();if(rv.done)break;buf+=dec.decode(rv.value,{stream:true});var lines=buf.split('\\\\n');buf=lines.pop()||'';for(var i=0;i<lines.length;i++){var l=lines[i];if(l.indexOf('data: ')!==0)continue;var dd=l.slice(6);if(dd==='[DONE]')continue;try{var j=JSON.parse(dd);var delta=j.choices&&j.choices[0]&&j.choices[0].delta&&(j.choices[0].delta.content||j.choices[0].delta.reasoning)||'';if(delta){full+=delta;state.messages[state.messages.length-1].content=full;renderMessages()}}catch(e){}}}}catch(e){state.messages.pop();renderMessages();add('ai','Error: '+e.message,'Gateway')}}
+async function send(){var text=$('input').value.trim();clientLog('chat.send',{text:text.slice(0,120)});if(!text)return;$('input').value='';autoSize();add('user',text);if(text==='/help'){add('ai','Perintah:\\n/crawl https://url = crawl halaman\\n/code task = kirim task coding ke AI\\n/crew topic = jalankan crew task\\n/exec tool_name [json] = jalankan ClawLink tool\\nTema ada di Settings: System, Dark, Light.','Help');return}if(text.indexOf('/crawl ')===0){runCrawlFromChat(text.replace('/crawl ','').trim());return}if(text.indexOf('/code ')===0){nav('coding');$('codePrompt').value=text.replace('/code ','').trim();askCoding();return}if(text.indexOf('/crew ')===0){nav('crew');$('crewTopic').value=text.replace('/crew ','').trim();runCrew();return}if(text.indexOf('/exec ')===0){runExecFromChat(text.replace('/exec ','').trim());return}await aiChat(text)}
+async function aiChat(text){add('system','Thinking...');try{var msgs=state.messages.filter(function(m){return m.role==='user'||m.role==='ai'}).slice(-12).map(function(m){return{role:m.role==='ai'?'assistant':'user',content:m.content}});if(text && msgs.length>0 && msgs[msgs.length-1].role==='user'){msgs[msgs.length-1].content=text}var res=await fetch(api()+'/ai/stream',{method:'POST',headers:{'Authorization':'Bearer '+token(),'Content-Type':'application/json'},body:JSON.stringify({model:$('model').value,messages:msgs,max_tokens:4096,stream:true})});state.messages.pop();renderMessages();if(!res.ok){var er=await res.text();add('ai','Error '+res.status+': '+er,'Gateway');return}var full='';var reader=res.body.getReader();var dec=new TextDecoder();var buf='';add('ai','',$('model').value);while(true){var rv=await reader.read();if(rv.done)break;buf+=dec.decode(rv.value,{stream:true});var lines=buf.split('\\n');buf=lines.pop()||'';for(var i=0;i<lines.length;i++){var l=lines[i];if(l.indexOf('data: ')!==0)continue;var dd=l.slice(6);if(dd==='[DONE]')continue;try{var j=JSON.parse(dd);var delta=j.choices&&j.choices[0]&&j.choices[0].delta&&(j.choices[0].delta.content||j.choices[0].delta.reasoning)||'';if(delta){full+=delta;state.messages[state.messages.length-1].content=full;renderMessages()}}catch(e){}}}}catch(e){state.messages.pop();renderMessages();add('ai','Error: '+e.message,'Gateway')}}
 async function runExecFromChat(cmd){if(!cmd){add('ai','Format: /exec <tool_name> [json_params]','Exec');return}var parts=cmd.split(' ');var toolName=parts[0];var jsonStr=parts.slice(1).join(' ').trim();var params={};if(jsonStr){try{params=JSON.parse(jsonStr)}catch(e){params={query:jsonStr}}}add('system','Executing tool '+toolName+' ...');try{var r=await fetch(api()+'/link/tools/'+toolName+'/execute',{method:'POST',headers:{'Authorization':'Bearer '+token(),'Content-Type':'application/json'},body:JSON.stringify({params:params})});var d=await r.json();state.messages.pop();renderMessages();add('ai',JSON.stringify(d,null,2),toolName)}catch(e){state.messages.pop();renderMessages();add('ai','Execution error: '+e.message,toolName)}}
-async function runCrawlFromChat(url){if(!url){add('ai','Format: /crawl https://example.com','Crawl4AI');return}add('system','Crawling '+url+' ...');try{var r=await fetch(api()+'/crawl4ai',{method:'POST',headers:{'Authorization':'Bearer '+token(),'Content-Type':'application/json'},body:JSON.stringify({url:url,max_length:30000})});var d=await r.json();state.messages.pop();renderMessages();if(d.error){add('ai','Crawl error: '+d.error,'Crawl4AI');return}add('ai','Title: '+(d.title||'-')+'\\\\nURL: '+d.url+'\\\\nLength: '+d.content_length+'\\\\n\\\\n'+(d.content||'').slice(0,6000),'Crawl4AI')}catch(e){state.messages.pop();renderMessages();add('ai','Crawl error: '+e.message,'Crawl4AI')}} 
+async function runCrawlFromChat(url){if(!url){add('ai','Format: /crawl https://example.com','Crawl4AI');return}add('system','Crawling '+url+' ...');try{var r=await fetch(api()+'/crawl4ai',{method:'POST',headers:{'Authorization':'Bearer '+token(),'Content-Type':'application/json'},body:JSON.stringify({url:url,max_length:30000})});var d=await r.json();state.messages.pop();renderMessages();if(d.error){add('ai','Crawl error: '+d.error,'Crawl4AI');return}add('ai','Title: '+(d.title||'-')+'\\nURL: '+d.url+'\\nLength: '+d.content_length+'\\n\\n'+(d.content||'').slice(0,6000),'Crawl4AI')}catch(e){state.messages.pop();renderMessages();add('ai','Crawl error: '+e.message,'Crawl4AI')}} 
 async function runCrawl(){var url=$('crawlUrl').value.trim();clientLog('crawl.run',{url:url,mode:$('crawlMode').value});if(!url)return toast('Masukkan URL');$('crawlOutput').textContent='Crawling...';var mode=$('crawlMode').value;var path=mode==='extract'?'/crawl4ai/extract':(mode==='crawl'?'/crawl':'/crawl4ai');try{var r=await fetch(api()+path,{method:'POST',headers:{'Authorization':'Bearer '+token(),'Content-Type':'application/json'},body:JSON.stringify({url:url,max_length:parseInt($('crawlMax').value||'50000')})});var d=await r.json();$('crawlOutput').textContent=JSON.stringify(d,null,2)}catch(e){$('crawlOutput').textContent='Error: '+e.message}}
 async function runCrew(){var topic=$('crewTopic').value.trim();clientLog('crew.run',{topic:topic});$('crewOutput').textContent='Running crew task...';try{var r=await fetch(api()+'/solace/task',{method:'POST',headers:{'Authorization':'Bearer '+token(),'Content-Type':'application/json'},body:JSON.stringify({type:'chat',prompt:'You are a research crew. Research, analyze, and write a report about: '+topic,model:'llama-3.3-70b-versatile',max_tokens:4096})});var d=await r.json();$('crewOutput').textContent=(d.choices&&d.choices[0]&&d.choices[0].message&&d.choices[0].message.content)||JSON.stringify(d,null,2)}catch(e){$('crewOutput').textContent='Error: '+e.message}}
 
 function getFileIcon(filename) {
   var ext = (filename || '').split('.').pop().toLowerCase();
-  if (ext === 'js' || ext === 'ts') return '\u{1F7E8}';
-  if (ext === 'jsx' || ext === 'tsx') return '\u269B\uFE0F';
-  if (ext === 'css') return '\u{1F3A8}';
-  if (ext === 'html') return '\u{1F310}';
-  if (ext === 'json') return '\u{1F4E6}';
-  if (ext === 'md') return '\u{1F4DD}';
-  if (ext === 'py') return '\u{1F40D}';
-  if (ext === 'sh' || ext === 'bash') return '\u{1F41A}';
-  return '\u{1F4C4}';
+  if (ext === 'js' || ext === 'ts') return '🟨';
+  if (ext === 'jsx' || ext === 'tsx') return '⚛️';
+  if (ext === 'css') return '🎨';
+  if (ext === 'html') return '🌐';
+  if (ext === 'json') return '📦';
+  if (ext === 'md') return '📝';
+  if (ext === 'py') return '🐍';
+  if (ext === 'sh' || ext === 'bash') return '🐚';
+  return '📄';
 }
 
 function deleteFile(name, event) {
@@ -455,24 +454,24 @@ function updateCursorPos() {
   var area = $('codeEditor');
   var val = area.value;
   var selStart = area.selectionStart;
-  var lines = val.substring(0, selStart).split('\\\\n');
+  var lines = val.substring(0, selStart).split('\\n');
   var row = lines.length;
   var col = lines[lines.length - 1].length + 1;
   $('editorCursor').textContent = 'Ln ' + row + ', Col ' + col;
   
   var charCount = val.length;
-  var lineCount = val.split('\\\\n').length;
-  $('editorStats').textContent = charCount + ' ch \xB7 ' + lineCount + ' lines';
+  var lineCount = val.split('\\n').length;
+  $('editorStats').textContent = charCount + ' ch xB7 ' + lineCount + ' lines';
 }
 
 function formatMarkdown(s) {
   s = escapeHtml(s);
-  s = s.replace(/\\\\\\\`\\\\\\\`\\\\\\\`(\\\\\\\\w*)\\\\\\\\n([\\\\\\\\s\\\\\\\\S]*?)\\\\\\\\n\\\\\\\`\\\\\\\`\\\\\\\`/g, function(m, lang, code) {
+  s = s.replace(/\\\`\\\`\\\`(\\\\w*)\\\\n([\\\\s\\\\S]*?)\\\\n\\\`\\\`\\\`/g, function(m, lang, code) {
     var uniqId = 'code_' + Math.random().toString(36).substr(2, 9);
-    return '<div class="markdown-code-wrapper" style="position:relative;margin:8px 0;"><pre class="markdown-code" id="' + uniqId + '">' + code + '</pre><button class="btn-apply" onclick="applyCopilotCode(this, \\\\\\\\\\\\'\\\\' + uniqId + \\\\\\\\\\\\'\\\\')" style="position:absolute;right:8px;top:8px;padding:4px 10px;font-size:11px;">Apply to Code</button></div>';
+    return '<div class="markdown-code-wrapper" style="position:relative;margin:8px 0;"><pre class="markdown-code" id="' + uniqId + '">' + code + '</pre><button class="btn-apply" onclick="applyCopilotCode(this, \\\\\\'\\' + uniqId + \\\\\\'\\')" style="position:absolute;right:8px;top:8px;padding:4px 10px;font-size:11px;">Apply to Code</button></div>';
   });
-  s = s.replace(/\\\\\\\`([^\\\\\\\`]+)\\\\\\\`/g, '<code class="inline-code">$1</code>');
-  s = s.replace(/\\\\\\\\n/g, '<br>');
+  s = s.replace(/\\\`([^\\\`]+)\\\`/g, '<code class="inline-code">$1</code>');
+  s = s.replace(/\\\\n/g, '<br>');
   return s;
 }
 
@@ -485,7 +484,7 @@ function applyCopilotCode(btn, preId) {
   updateCursorPos();
   saveCurrent();
   toast('Kode berhasil diterapkan ke editor!');
-  btn.textContent = '\u2713 Applied';
+  btn.textContent = '✓ Applied';
   btn.style.background = 'var(--good)';
   btn.style.borderColor = 'var(--good)';
   setTimeout(function() {
@@ -520,7 +519,7 @@ async function sendCopilot(customPrompt) {
   $('copilotModelBadge').textContent = modelName;
   
   try {
-    var promptSystem = "Anda adalah AI Coding Copilot handal. Analisis file berikut:\\\\nFile: " + fileName + "\\\\n\\\\nKode saat ini:\\\\n" + currentCode + "\\\\n\\\\nJawab pertanyaan atau buat instruksi code. Jika memberikan revisi kode, berikan dalam format markdown code block \\\`\\\`\\\` sehingga user dapat meng-apply dengan tombol Apply.";
+    var promptSystem = "Anda adalah AI Coding Copilot handal. Analisis file berikut:\\nFile: " + fileName + "\\n\\nKode saat ini:\\n" + currentCode + "\\n\\nJawab pertanyaan atau buat instruksi code. Jika memberikan revisi kode, berikan dalam format markdown code block \`\`\` sehingga user dapat meng-apply dengan tombol Apply.";
     
     var res = await fetch(api() + '/ai/stream', {
       method: 'POST',
@@ -561,7 +560,7 @@ async function sendCopilot(customPrompt) {
       var rv = await reader.read();
       if (rv.done) break;
       buf += dec.decode(rv.value, { stream: true });
-      var lines = buf.split('\\\\n');
+      var lines = buf.split('\\n');
       buf = lines.pop() || '';
       for (var i = 0; i < lines.length; i++) {
         var l = lines[i];
@@ -613,7 +612,7 @@ function renderFiles(){
     
     var delBtn = document.createElement('button');
     delBtn.className = 'file-del';
-    delBtn.innerHTML = '\u2715';
+    delBtn.innerHTML = '✕';
     delBtn.title = 'Hapus File';
     delBtn.onclick = function(e){ deleteFile(n, e); };
     d.appendChild(delBtn);
@@ -649,10 +648,10 @@ async function askCoding(){
   nav('chat');
   $('input').value='';
   add('user','/code '+p);
-  await aiChat('Anda adalah AI coding assistant. Task: '+p+'\\\\n\\\\nFile: '+$('fileName').value+'\\\\nKode saat ini:\\\\n'+code);
+  await aiChat('Anda adalah AI coding assistant. Task: '+p+'\\n\\nFile: '+$('fileName').value+'\\nKode saat ini:\\n'+code);
 }
 
-async function loadLinks(kind){$('linksGrid').innerHTML='<div class="card">Loading...</div>';var path=kind==='skills'?'/skills':(kind.indexOf('hub/')===0?'/'+kind:'/link/'+kind);try{var r=await fetch(api()+path);var d=await r.json();var items=d.items||d.results||d.integrations||d.tools||d.skills||[];$('linksGrid').innerHTML='';items.slice(0,36).forEach(function(x){var name=x.displayName||x.name||x.slug||x.integration||'Item';var desc=x.summary||x.description||x.connectionLabel||'';var c=document.createElement('div');c.className='feature';c.innerHTML='<div class="big">\u{1F539}</div><h3>'+escapeHtml(name)+'</h3><p>'+escapeHtml(desc).slice(0,120)+'</p>';c.onclick=function(){nav('chat');$('input').value='Tell me about '+name;$('input').focus()};$('linksGrid').appendChild(c)});if(!items.length)$('linksGrid').innerHTML='<div class="card">No result.</div>'}catch(e){$('linksGrid').innerHTML='<div class="card">Error: '+escapeHtml(e.message)+'</div>'}}
+async function loadLinks(kind){$('linksGrid').innerHTML='<div class="card">Loading...</div>';var path=kind==='skills'?'/skills':(kind.indexOf('hub/')===0?'/'+kind:'/link/'+kind);try{var r=await fetch(api()+path);var d=await r.json();var items=d.items||d.results||d.integrations||d.tools||d.skills||[];$('linksGrid').innerHTML='';items.slice(0,36).forEach(function(x){var name=x.displayName||x.name||x.slug||x.integration||'Item';var desc=x.summary||x.description||x.connectionLabel||'';var c=document.createElement('div');c.className='feature';c.innerHTML='<div class="big">🔹</div><h3>'+escapeHtml(name)+'</h3><p>'+escapeHtml(desc).slice(0,120)+'</p>';c.onclick=function(){nav('chat');$('input').value='Tell me about '+name;$('input').focus()};$('linksGrid').appendChild(c)});if(!items.length)$('linksGrid').innerHTML='<div class="card">No result.</div>'}catch(e){$('linksGrid').innerHTML='<div class="card">Error: '+escapeHtml(e.message)+'</div>'}}
 async function refreshSolace(){$('solaceOutput').textContent='Loading...';try{var all=await Promise.all(['/solace/status','/solace/queues','/solace/service'].map(function(p){return fetch(api()+p).then(function(r){return r.json()}).catch(function(e){return{error:e.message}})}));$('solaceOutput').textContent=JSON.stringify({status:all[0],queues:all[1],service:all[2]},null,2)}catch(e){$('solaceOutput').textContent='Error: '+e.message}}
 function autoSize(){$('input').style.height='auto';$('input').style.height=Math.min($('input').scrollHeight,150)+'px'}
 
@@ -852,7 +851,7 @@ function renderDriveFiles() {
     info.innerHTML = '<span style="font-size: 20px;">' + icon + '</span>' +
                      '<div>' +
                        '<h4 style="margin:0; font-size:14px; font-weight:700;">' + escapeHtml(f.name) + '</h4>' +
-                       '<span style="font-size:11px; color:var(--muted);">' + sizeStr + ' \u2022 ' + new Date(f.createdTime).toLocaleDateString() + '</span>' +
+                       '<span style="font-size:11px; color:var(--muted);">' + sizeStr + ' • ' + new Date(f.createdTime).toLocaleDateString() + '</span>' +
                      '</div>';
     item.appendChild(info);
     
@@ -921,8 +920,6 @@ $('importAllDriveBtn').onclick = async function() {
 };
 
 initFirebaseDrive();
-<\/script>
+</script>
 </body>
 </html>
-`;
-

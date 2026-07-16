@@ -1,10 +1,9 @@
-// workers/gateway/src/pages/logs.html
-var logs_default = `<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Activity Logs \u2014 Solace Hermes</title>
+<title>Activity Logs — Solace Hermes</title>
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;overflow:hidden}
@@ -73,39 +72,39 @@ pre{background:var(--code);border:1px solid var(--border);border-radius:14px;pad
 <body data-theme="system">
 <div class="app">
   <aside class="sidebar" id="sidebar">
-    <div class="brand"><div class="logo">\u26A1</div><div><h1>Solace Hermes</h1><p>Codex-style mobile AI hub</p></div><span class="status-dot" id="liveDot"></span></div>
-    <button class="new-chat" onclick="location.href='/chat-live'">\uFF0B New Chat</button>
+    <div class="brand"><div class="logo">⚡</div><div><h1>Solace Hermes</h1><p>Codex-style mobile AI hub</p></div><span class="status-dot" id="liveDot"></span></div>
+    <button class="new-chat" onclick="location.href='/chat-live'">＋ New Chat</button>
     <nav class="nav" id="nav">
-      <a href="/dashboard"><span class="ico">\u{1F3E0}</span><span>Realtime Dashboard</span></a>
-      <a data-view="chat" href="/chat-live"><span class="ico">\u{1F4AC}</span><span>Chat-Live</span></a>
-      <a data-view="coding" href="/chat-live#coding"><span class="ico">\u2318</span><span>AI Coding</span></a>
-      <a href="/crawl4ai"><span class="ico">\u{1F577}\uFE0F</span><span>Crawl4AI Page</span></a>
-      <a href="/crew"><span class="ico">\u{1F916}</span><span>CrewAI Page</span></a>
-      <a href="https://rocspace-links.certveis.workers.dev" target="_blank" rel="noopener"><span class="ico">\u{1F517}</span><span>Links Hub</span></a>
-      <a href="/integrations" target="_blank"><span class="ico">\u{1F9E9}</span><span>Integrations JSON</span></a>
-      <a href="/solace/status" target="_blank"><span class="ico">\u{1F4E1}</span><span>Solace Status</span></a>
-      <a href="/zapier"><span class="ico">\u26A1</span><span>Zapier Template</span></a>
-      <a href="/logs" class="active"><span class="ico">\u{1F4DC}</span><span>Activity Logs</span></a>
-      <a data-view="drive" href="/chat-live#drive"><span class="ico">\u{1F4C1}</span><span>Google Drive</span></a>
-      <a data-view="settings" href="/chat-live#settings"><span class="ico">\u2699\uFE0F</span><span>Settings</span></a>
-      <a data-view="profile" href="/chat-live#profile"><span class="ico">\u{1F464}</span><span>Profile</span></a>
+      <a href="/dashboard"><span class="ico">🏠</span><span>Realtime Dashboard</span></a>
+      <a data-view="chat" href="/chat-live"><span class="ico">💬</span><span>Chat-Live</span></a>
+      <a data-view="coding" href="/chat-live#coding"><span class="ico">⌘</span><span>AI Coding</span></a>
+      <a href="/crawl4ai"><span class="ico">🕷️</span><span>Crawl4AI Page</span></a>
+      <a href="/crew"><span class="ico">🤖</span><span>CrewAI Page</span></a>
+      <a href="https://rocspace-links.certveis.workers.dev" target="_blank" rel="noopener"><span class="ico">🔗</span><span>Links Hub</span></a>
+      <a href="/integrations" target="_blank"><span class="ico">🧩</span><span>Integrations JSON</span></a>
+      <a href="/solace/status" target="_blank"><span class="ico">📡</span><span>Solace Status</span></a>
+      <a href="/zapier"><span class="ico">⚡</span><span>Zapier Template</span></a>
+      <a href="/logs" class="active"><span class="ico">📜</span><span>Activity Logs</span></a>
+      <a data-view="drive" href="/chat-live#drive"><span class="ico">📁</span><span>Google Drive</span></a>
+      <a data-view="settings" href="/chat-live#settings"><span class="ico">⚙️</span><span>Settings</span></a>
+      <a data-view="profile" href="/chat-live#profile"><span class="ico">👤</span><span>Profile</span></a>
     </nav>
-    <div class="side-foot"><div class="mini-card"><b>Command cepat</b><span>/crawl URL \xB7 /code task \xB7 /crew topic \xB7 /help</span></div><div class="mini-card"><b>Theme</b><span>System, dark, light + ukuran font</span></div></div>
+    <div class="side-foot"><div class="mini-card"><b>Command cepat</b><span>/crawl URL xB7 /code task xB7 /crew topic xB7 /help</span></div><div class="mini-card"><b>Theme</b><span>System, dark, light + ukuran font</span></div></div>
   </aside>
   <section class="layout">
     <header class="topbar">
-      <button class="icon-btn menu-btn" id="menuBtn" onclick="document.getElementById('sidebar').classList.toggle('open')">\u2630</button>
+      <button class="icon-btn menu-btn" id="menuBtn" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
       <div class="title">
         <h2 id="viewTitle">Activity Logs</h2>
         <p id="viewDesc">Logs untuk Crawl4AI, Chat, Zapier, CrewAI/Solace task, Notify, dan UI client.</p>
       </div>
       <div class="spacer"></div>
-      <button class="icon-btn" id="themeBtn" onclick="cycleTheme()">\u{1F313}</button>
+      <button class="icon-btn" id="themeBtn" onclick="cycleTheme()">🌓</button>
     </header>
     <main class="main" style="overflow: auto;">
       <div class="pg">
         <div class="hero-logs">
-          <h1>\u{1F4DC} Solace Hermes Activity Logs</h1>
+          <h1>📜 Solace Hermes Activity Logs</h1>
           <p class="muted">Logs untuk Crawl4AI, Chat, Zapier, CrewAI/Solace task, Notify, dan UI client. Server logs dikirim ke Cloudflare console + Solace topics <code>hermes/log/*</code>. Jika KV binding <code>LOGS</code> tersedia, endpoint /logs/list juga menampilkan server logs.</p>
           <a class="btn" href="/chat-live">Chat-Live</a>
           <a class="btn" href="/crawl4ai">Crawl4AI</a>
@@ -135,14 +134,14 @@ pre{background:var(--code);border:1px solid var(--border);border-radius:14px;pad
   </section>
 </div>
 <div class="mobile-tabs" id="mobileTabs">
-  <a href="/dashboard">\u{1F3E0}</a>
-  <a data-view="chat" href="/chat-live">\u{1F4AC}</a>
-  <a data-view="coding" href="/chat-live#coding">\u2318</a>
-  <a href="/crawl4ai">\u{1F577}\uFE0F</a>
-  <a href="/crew">\u{1F916}</a>
-  <a href="/logs" class="active">\u{1F4DC}</a>
-  <a href="https://rocspace-links.certveis.workers.dev" target="_blank" rel="noopener">\u{1F517}</a>
-  <a data-view="settings" href="/chat-live#settings">\u2699\uFE0F</a>
+  <a href="/dashboard">🏠</a>
+  <a data-view="chat" href="/chat-live">💬</a>
+  <a data-view="coding" href="/chat-live#coding">⌘</a>
+  <a href="/crawl4ai">🕷️</a>
+  <a href="/crew">🤖</a>
+  <a href="/logs" class="active">📜</a>
+  <a href="https://rocspace-links.certveis.workers.dev" target="_blank" rel="noopener">🔗</a>
+  <a data-view="settings" href="/chat-live#settings">⚙️</a>
 </div>
 <script>
 function t(){
@@ -162,7 +161,7 @@ async function loadServer(){
   }
 }
 function tailHint(){
-  document.getElementById('server').textContent='wrangler tail hermes-cloudflare --format pretty\\\\n\\\\nSolace topic prefix: hermes/log/*\\\\nImportant types: crawl4ai.start, crawl4ai.success, ai.chat, zapier.webhook, solace.task, notify, ui.nav, chat.send'
+  document.getElementById('server').textContent='wrangler tail hermes-cloudflare --format pretty\\n\\nSolace topic prefix: hermes/log/*\\nImportant types: crawl4ai.start, crawl4ai.success, ai.chat, zapier.webhook, solace.task, notify, ui.nav, chat.send'
 }
 function loadClient(){
   var el=document.getElementById('client');
@@ -178,7 +177,6 @@ function setTheme(t){document.body.setAttribute('data-theme',t);localStorage.set
 function cycleTheme(){var a=['system','dark','light'];var c=document.body.getAttribute('data-theme')||'system';setTheme(a[(a.indexOf(c)+1)%a.length])}
 setTheme(localStorage.getItem('hermes_theme')||'system');
 loadClient();
-<\/script>
+</script>
 </body>
-</html>`;
-
+</html>
