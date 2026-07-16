@@ -1,0 +1,16 @@
+name = "hermes-cloudflare"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+
+[vars]
+# Secrets are set via CF API (secret_text bindings)
+# Do NOT put keys here
+
+# [[kv_namespaces]]
+# binding = "LOGS"
+# id = ""
+
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "rocspace-logs"
+# database_id = ""

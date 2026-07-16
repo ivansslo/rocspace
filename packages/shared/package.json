@@ -1,0 +1,15 @@
+{
+  "name": "@rocspace/shared",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --format=esm --outdir=dist --sourcemap && tsc --emitDeclarationOnly",
+    "dev": "esbuild src/index.ts --bundle --format=esm --outdir=dist --watch"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "typescript": "^5.8.0"
+  }
+}

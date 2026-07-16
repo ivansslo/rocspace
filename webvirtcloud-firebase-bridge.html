@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RocSpace VM — WebVirtCloud</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+        .header { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-bottom: 1px solid #334155; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; }
+        .header h1 { font-size: 18px; font-weight: 600; color: #60a5fa; }
+        .header .badge { background: #22c55e; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+        .container { display: flex; height: calc(100vh - 52px); }
+        .sidebar { width: 240px; background: #1e293b; border-right: 1px solid #334155; padding: 16px 0; overflow-y: auto; flex-shrink: 0; }
+        .sidebar-item { padding: 10px 20px; cursor: pointer; transition: all 0.15s; font-size: 13px; display: flex; align-items: center; gap: 8px; }
+        .sidebar-item:hover { background: #334155; }
+        .sidebar-item.active { background: #3b82f6; color: #fff; }
+        .sidebar-item svg { width: 16px; height: 16px; }
+        .main { flex: 1; position: relative; }
+        iframe { width: 100%; height: 100%; border: none; }
+        .auth-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #0f172a; display: flex; align-items: center; justify-content: center; z-index: 10; }
+        .auth-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 32px; width: 380px; text-align: center; }
+        .auth-card h2 { color: #60a5fa; margin-bottom: 8px; font-size: 20px; }
+        .auth-card p { color: #94a3b8; font-size: 13px; margin-bottom: 24px; }
+        .auth-card .btn { background: #3b82f6; color: #fff; border: none; padding: 10px 24px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; width: 100%; transition: background 0.15s; }
+        .auth-card .btn:hover { background: #2563eb; }
+        .auth-card .spinner { width: 24px; height: 24px; border: 3px solid #334155; border-top: 3px solid #3b82f6; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 16px auto; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .user-info { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+        .user-info .avatar { width: 28px; height: 28px; border-radius: 50%; background: #3b82f6; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; }
+        .status-bar { position: absolute; bottom: 0; left: 0; right: 0; background: #1e293b; border-top: 1px solid #334155; padding: 6px 16px; font-size: 11px; color: #64748b; display: flex; justify-content: space-between; z-index: 5; }
+        @media (max-width: 768px) { .sidebar { display: none; } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🖥️ RocSpace VM Console</h1>
+        <div style="display:flex;align-items:center;gap:12px;">
+            <span class="badge" id="firebase-status">Firebase: Checking...</span>
+            <div class="user-info" id="user-info" style="display:none;">
+                <div class="avatar" id="user-avatar"></div>
+                <span id="user-name"></span>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="sidebar">
+            <div class="sidebar-item active" onclick="navigate('wvc')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                VM Console
+            </div>
+            <div class="sidebar-item" onclick="navigate('instances')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><circle cx="6" cy="6" r="1"/><circle cx="6" cy="18" r="1"/></svg>
+                Instances
+            </div>
+            <div class="sidebar-item" onclick="navigate('networks')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                Networks
+            </div>
+            <div class="sidebar-item" onclick="navigate('storages')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+                Storages
+            </div>
+            <div class="sidebar-item" onclick="navigate('admin')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                Admin Panel
+            </div>
+            <hr style="border-color:#334155;margin:12px 16px;">
+            <div class="sidebar-item" onclick="window.open('https://ai.roadfx.biz.id','_blank')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                AI Gateway
+            </div>
+            <div class="sidebar-item" onclick="window.open('https://roadfx.biz.id','_blank')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                RocSpace Home
+            </div>
+        </div>
+        <div class="main">
+            <div class="auth-overlay" id="auth-overlay">
+                <div class="auth-card">
+                    <h2>🖥️ RocSpace VM</h2>
+                    <p>Sign in with your RocSpace account to access VM management</p>
+                    <div id="auth-loading" class="spinner"></div>
+                    <button class="btn" id="auth-btn" style="display:none;" onclick="signInWithFirebase()">Sign in with RocSpace (Google)</button>
+                    <p id="auth-error" style="color:#f87171;font-size:12px;margin-top:12px;display:none;"></p>
+                </div>
+            </div>
+            <iframe id="wvc-frame" src="" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"></iframe>
+            <div class="status-bar">
+                <span id="connection-status">WebVirtCloud: Connecting...</span>
+                <span>RocSpace v17.2.0 · Firebase rofai-agent</span>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js';
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAJBjhU9OEC9vX8jcHX6LUvwXkYOctRYuo",
+            authDomain: "rofai-agent.firebaseapp.com",
+            projectId: "rofai-agent",
+            storageBucket: "rofai-agent.firebasestorage.app",
+            messagingSenderId: "864507972707",
+            appId: "1:864507972707:web:eecc6ffff6eee599b17c56"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        // Detect base URL for WVC
+        const WVC_BASE = window.location.pathname.startsWith('/vm') ? '/vm/wvc/' : '/wvc/';
+
+        window.signInWithFirebase = async () => {
+            try {
+                document.getElementById('auth-btn').style.display = 'none';
+                document.getElementById('auth-loading').style.display = 'block';
+                await signInWithPopup(auth, provider);
+            } catch (e) {
+                document.getElementById('auth-error').textContent = e.message;
+                document.getElementById('auth-error').style.display = 'block';
+                document.getElementById('auth-btn').style.display = 'block';
+                document.getElementById('auth-loading').style.display = 'none';
+            }
+        };
+
+        window.signOutUser = async () => {
+            await signOut(auth);
+            location.reload();
+        };
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById('auth-overlay').style.display = 'none';
+                document.getElementById('firebase-status').textContent = 'Firebase: Connected';
+                document.getElementById('firebase-status').style.background = '#22c55e';
+                document.getElementById('user-info').style.display = 'flex';
+                document.getElementById('user-name').textContent = user.displayName || user.email;
+                document.getElementById('user-avatar').textContent = (user.displayName || user.email).charAt(0).toUpperCase();
+                document.getElementById('wvc-frame').src = WVC_BASE;
+                document.getElementById('connection-status').textContent = 'WebVirtCloud: Connected as ' + user.email;
+            } else {
+                document.getElementById('auth-overlay').style.display = 'flex';
+                document.getElementById('auth-loading').style.display = 'none';
+                document.getElementById('auth-btn').style.display = 'block';
+                document.getElementById('firebase-status').textContent = 'Firebase: Not signed in';
+                document.getElementById('firebase-status').style.background = '#f59e0b';
+                document.getElementById('user-info').style.display = 'none';
+            }
+        });
+
+        window.navigate = (section) => {
+            document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            const frame = document.getElementById('wvc-frame');
+            const routes = {
+                wvc: WVC_BASE,
+                instances: WVC_BASE + 'instances/',
+                networks: WVC_BASE + 'networks/',
+                storages: WVC_BASE + 'storages/',
+                admin: WVC_BASE + 'admin/'
+            };
+            if (routes[section]) frame.src = routes[section];
+        };
+    </script>
+</body>
+</html>

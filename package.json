@@ -1,0 +1,37 @@
+{
+  "name": "rocspace",
+  "version": "1.0.0",
+  "private": true,
+  "description": "RocSpace — AI Infrastructure Platform",
+  "workspaces": [
+    "packages/*",
+    "workers/*",
+    "apps/*",
+    "pages/*",
+    "cli"
+  ],
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "deploy": "turbo deploy",
+    "deploy:site": "npm run deploy -w workers/site",
+    "deploy:gateway": "npm run deploy -w workers/gateway",
+    "deploy:auth": "npm run deploy -w workers/auth",
+    "deploy:ai": "npm run deploy -w workers/ai",
+    "deploy:webhook": "npm run deploy -w workers/webhook",
+    "deploy:r2": "npm run deploy -w workers/r2",
+    "deploy:all": "turbo deploy --filter=./workers/*"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.0",
+    "typescript": "^5.8.0",
+    "esbuild": "^0.25.0",
+    "@cloudflare/workers-types": "^4.20250620.0",
+    "wrangler": "^4.0.0"
+  },
+  "packageManager": "npm@11.0.0",
+  "engines": {
+    "node": ">=20"
+  }
+}

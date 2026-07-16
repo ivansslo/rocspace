@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+
+# Build
+dist/
+.wrangler/
+.dev.vars
+.env
+.env.local
+.env.*.local
+
+# Secrets — NEVER commit
+SECRETS*.env
+*.pem
+*.key
+!*.pub
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Turbo
+.turbo/
+
+# Workers
+workers/*/dist/
+dist/
+packages/*/dist/
+workers/*/dist/

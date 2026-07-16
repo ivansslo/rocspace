@@ -1,0 +1,311 @@
+// ═══════════════════════════════════════════════════════════
+//  roc-site — Unified Router v17.3.0
+//  16 domains → roc-site, WebVirtCloud + Firebase (yttriferous-magpie-16ppv)
+// ═══════════════════════════════════════════════════════════
+
+import { ENDPOINTS, DOMAIN_MAP, corsHeaders, jsonResponse, htmlResponse } from '@rocspace/shared';
+
+const GATEWAY = ENDPOINTS.GATEWAY;
+const CLOUDRUN = ENDPOINTS.CLOUDRUN;
+const VM_HOST = '161.118.253.28';
+
+const FULL_DOMAIN_MAP = [
+  ...DOMAIN_MAP,
+  { hostname: 'vm.roadfx.biz.id',      worker: 'site', description: '🖥️ VM Console (WebVirtCloud + Firebase)' },
+  { hostname: 'monitor.roadfx.biz.id',  worker: 'site', description: '📊 Uptime Monitor' },
+];
+
+export default {
+  async fetch(request: Request, env: any): Promise<Response> {
+    const url = new URL(request.url);
+    const path = url.pathname;
+    const host = url.hostname;
+    const gwToken = env.GATEWAY_TOKEN || '';
+
+    if (request.method === 'OPTIONS') {
+      return new Response(null, { headers: corsHeaders() });
+    }
+
+    // ─── VM Console ─────────────────────────────────────
+    if (host.startsWith('vm.')) {
+      if (path === '/' || path === '') return htmlResponse(renderVMConsole());
+      return Response.redirect(`http://${VM_HOST}/vm${path === '/' ? '/' : path}`, 302);
+    }
+    if (host.startsWith('monitor.')) {
+      return Response.redirect(`http://${VM_HOST}/monitor${path === '/' ? '/' : path}`, 302);
+    }
+
+    // ─── Path-based VM/Monitor ──────────────────────────
+    if (path === '/vm' || path === '/vm/') return htmlResponse(renderVMConsole());
+    if (path.startsWith('/vm/')) return Response.redirect(`http://${VM_HOST}${path}`, 302);
+    if (path === '/monitor' || path === '/monitor/') return Response.redirect(`http://${VM_HOST}/monitor/`, 302);
+    if (path.startsWith('/monitor/')) return Response.redirect(`http://${VM_HOST}/monitor${path.substring(9)}`, 302);
+
+    // ─── AI / API (auto-auth) ───────────────────────────
+    if (path.startsWith('/ai/')) return proxyTo(request, GATEWAY, path, url, gwToken);
+    if (path.startsWith('/v1/')) return proxyTo(request, GATEWAY, path, url, gwToken);
+
+    // ─── Host-based routing ─────────────────────────────
+    if (host.startsWith('ai.') && !host.startsWith('aiven')) return proxyTo(request, GATEWAY, path, url, gwToken);
+    if (host.startsWith('gateway.')) return proxyTo(request, GATEWAY, path, url, gwToken);
+    if (host.startsWith('api.')) return proxyTo(request, GATEWAY, path, url, gwToken);
+    if (host.startsWith('chat.') || host.startsWith('live.')) {
+      return proxyTo(request, CLOUDRUN, path === '/' ? '/chat-live' : path, url);
+    }
+    if (host.startsWith('status.')) return htmlResponse(renderStatus());
+    if (host.startsWith('dashboard.')) return proxyTo(request, CLOUDRUN, '/dashboard', url);
+    if (host.startsWith('cloudrun.')) return proxyTo(request, CLOUDRUN, path === '/' ? '/' : path, url);
+    if (host.startsWith('auth.')) return proxyTo(request, GATEWAY, path, url);
+    if (host.startsWith('factory.')) return proxyTo(request, GATEWAY, path, url, gwToken);
+    if (host.startsWith('webhook.')) return proxyTo(request, GATEWAY, path, url, gwToken);
+    if (host.startsWith('r2.')) return proxyTo(request, GATEWAY, path, url);
+    if (host.startsWith('app.')) {
+      if (path === '/' || path === '') return Response.redirect('https://roadfx.biz.id/links', 302);
+      return proxyTo(request, GATEWAY, path, url);
+    }
+
+    // ─── Path-based routing ─────────────────────────────
+    if (path === '/chat-live' || path.startsWith('/chat-live/')) return proxyTo(request, CLOUDRUN, path, url);
+    if (path === '/profile' || path.startsWith('/profile/')) return Response.redirect(url.origin + '/chat-live#profile', 302);
+    if (path === '/chat') return htmlResponse(renderQuickChat());
+    if (path === '/status') return htmlResponse(renderStatus());
+    if (path.startsWith('/api/')) return proxyTo(request, GATEWAY, path, url);
+    if (path.startsWith('/auth/')) return proxyTo(request, GATEWAY, path, url);
+    if (path.startsWith('/gateway/')) return proxyTo(request, GATEWAY, path.replace('/gateway', ''), url);
+    if (path.startsWith('/cloudrun/')) return proxyTo(request, CLOUDRUN, path.replace('/cloudrun', ''), url);
+    if (path.startsWith('/webhook/')) return proxyTo(request, GATEWAY, path, url, gwToken);
+    if (path === '/crew' || path.startsWith('/crew/') || path === '/crawl4ai' || path.startsWith('/crawl4ai/') ||
+        path === '/zapier' || path.startsWith('/zapier/') || path === '/logs' || path.startsWith('/logs/') ||
+        path === '/dashboard' || path.startsWith('/dashboard/')) return proxyTo(request, GATEWAY, path, url);
+    if (path === '/links') return proxyTo(request, GATEWAY, '/links', url);
+    if (path === '/solace/' || path === '/solace/status' || path === '/solace/queues') return proxyTo(request, GATEWAY, path, url);
+    if (path.startsWith('/crawl') || path.startsWith('/notify')) return proxyTo(request, GATEWAY, path, url);
+
+    return htmlResponse(renderDashboard());
+  }
+};
+
+async function proxyTo(request: Request, base: string, path: string, url: URL, injectToken?: string): Promise<Response> {
+  try {
+    const target = base + path + url.search;
+    const headers = new Headers(request.headers);
+    for (const key of ['cf-connecting-ip', 'cf-ipcountry', 'cf-ray', 'cf-visitor', 'cf-worker']) headers.delete(key);
+    headers.set('X-Forwarded-Host', url.hostname);
+    headers.set('X-Forwarded-Proto', url.protocol.replace(':', ''));
+    if (injectToken) {
+      const existingAuth = headers.get('Authorization') || '';
+      if (!existingAuth || existingAuth === 'Bearer ' || existingAuth === 'Bearer') {
+        headers.set('Authorization', `Bearer ${injectToken}`);
+      }
+    }
+    const resp = await fetch(target, { method: request.method, headers, body: request.method !== 'GET' && request.method !== 'HEAD' ? request.body : undefined });
+    const newHeaders = new Headers(resp.headers);
+    newHeaders.set('Access-Control-Allow-Origin', '*');
+    const location = newHeaders.get('location');
+    if (location?.includes('ai-vitality')) {
+      newHeaders.set('location', location.replace(/https?:\/\/ai-vitality-[^.]+\.us-west1\.run\.app/g, `https://${url.hostname}`));
+    }
+    return new Response(resp.body, { status: resp.status, headers: newHeaders });
+  } catch (e: any) { return jsonResponse({ error: e.message }, 502); }
+}
+
+// ─── VM Console (Firebase bridge - yttriferous-magpie-16ppv) ──
+
+function renderVMConsole(): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RocSpace VM — WebVirtCloud</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh}
+.header{background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%);border-bottom:1px solid #334155;padding:12px 24px;display:flex;align-items:center;justify-content:space-between}
+.header h1{font-size:18px;font-weight:600;color:#60a5fa}
+.badge{padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;color:#fff}
+.badge-ok{background:#22c55e}.badge-warn{background:#f59e0b}.badge-err{background:#ef4444}
+.container{display:flex;height:calc(100vh - 52px)}
+.sidebar{width:220px;background:#1e293b;border-right:1px solid #334155;padding:16px 0;overflow-y:auto;flex-shrink:0}
+.si{padding:10px 20px;cursor:pointer;transition:all .15s;font-size:13px;display:flex;align-items:center;gap:8px}
+.si:hover{background:#334155}.si.active{background:#3b82f6;color:#fff}
+.main{flex:1;position:relative}
+iframe{width:100%;height:100%;border:none}
+.overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:#0f172a;display:flex;align-items:center;justify-content:center;z-index:10}
+.card{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:32px;width:380px;text-align:center}
+.card h2{color:#60a5fa;margin-bottom:8px;font-size:20px}.card p{color:#94a3b8;font-size:13px;margin-bottom:24px}
+.btn{background:#3b82f6;color:#fff;border:none;padding:10px 24px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:500;width:100%;transition:background .15s}
+.btn:hover{background:#2563eb}.btn-danger{background:#ef4444}.btn-danger:hover{background:#dc2626}
+.spinner{width:24px;height:24px;border:3px solid #334155;border-top:3px solid #3b82f6;border-radius:50%;animation:spin .8s linear infinite;margin:16px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+.user-info{display:flex;align-items:center;gap:8px;font-size:12px}
+.avatar{width:28px;height:28px;border-radius:50%;background:#3b82f6;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600}
+.status-bar{position:absolute;bottom:0;left:0;right:0;background:#1e293b;border-top:1px solid #334155;padding:6px 16px;font-size:11px;color:#64748b;display:flex;justify-content:space-between;z-index:5}
+@media(max-width:768px){.sidebar{display:none}}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>🖥️ RocSpace VM Console</h1>
+  <div style="display:flex;align-items:center;gap:12px">
+    <span class="badge badge-warn" id="fb-status">Firebase: Checking...</span>
+    <div class="user-info" id="user-info" style="display:none">
+      <div class="avatar" id="u-avatar"></div>
+      <span id="u-name"></span>
+      <button class="btn btn-danger" style="width:auto;padding:4px 10px;font-size:11px" onclick="signOutUser()">Logout</button>
+    </div>
+  </div>
+</div>
+<div class="container">
+  <div class="sidebar">
+    <div class="si active" onclick="nav('wvc',this)">🖥️ VM Console</div>
+    <div class="si" onclick="nav('instances',this)">💻 Instances</div>
+    <div class="si" onclick="nav('networks',this)">🌐 Networks</div>
+    <div class="si" onclick="nav('storages',this)">💾 Storages</div>
+    <div class="si" onclick="nav('admin',this)">⚙️ Admin</div>
+    <hr style="border-color:#334155;margin:12px 16px">
+    <div class="si" onclick="window.open('https://ai.roadfx.biz.id','_blank')">🧠 AI Gateway</div>
+    <div class="si" onclick="window.open('https://roadfx.biz.id','_blank')">🏠 Home</div>
+    <div class="si" onclick="window.open('https://monitor.roadfx.biz.id','_blank')">📊 Monitor</div>
+  </div>
+  <div class="main">
+    <div class="overlay" id="overlay">
+      <div class="card">
+        <h2>🖥️ RocSpace VM</h2>
+        <p>Sign in with Google to manage virtual machines</p>
+        <div class="spinner" id="auth-load"></div>
+        <button class="btn" id="auth-btn" style="display:none" onclick="signInWithFirebase()">🔑 Sign in with Google</button>
+        <p id="auth-err" style="color:#f87171;font-size:12px;margin-top:12px;display:none"></p>
+      </div>
+    </div>
+    <iframe id="wvc-frame" src="" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"></iframe>
+    <div class="status-bar">
+      <span id="conn-status">WebVirtCloud: Waiting for auth...</span>
+      <span>RocSpace v17.3.0 · Firebase yttriferous-magpie-16ppv</span>
+    </div>
+  </div>
+</div>
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js';
+import{getAuth,signInWithPopup,GoogleAuthProvider,onAuthStateChanged,signOut}from'https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js';
+
+const cfg={apiKey:"AIzaSyBLpdsheG9pYmtYqGgo0af0_5Du_fDvJYk",authDomain:"yttriferous-magpie-16ppv.firebaseapp.com",projectId:"yttriferous-magpie-16ppv",storageBucket:"yttriferous-magpie-16ppv.firebasestorage.app",messagingSenderId:"819208434965",appId:"1:819208434965:web:35c60025a91bd089c3251c"};
+const app=initializeApp(cfg);const auth=getAuth(app);const prov=new GoogleAuthProvider();
+const WVC="http://161.118.253.28/vm/wvc/";
+
+window.signInWithFirebase=async()=>{
+  try{document.getElementById('auth-btn').style.display='none';document.getElementById('auth-load').style.display='block';await signInWithPopup(auth,prov)}
+  catch(e){document.getElementById('auth-err').textContent=e.message;document.getElementById('auth-err').style.display='block';document.getElementById('auth-btn').style.display='block';document.getElementById('auth-load').style.display='none'}
+};
+window.signOutUser=async()=>{await signOut(auth);location.reload()};
+
+onAuthStateChanged(auth,u=>{
+  if(u){
+    document.getElementById('overlay').style.display='none';
+    document.getElementById('fb-status').textContent='Firebase: Connected';document.getElementById('fb-status').className='badge badge-ok';
+    document.getElementById('user-info').style.display='flex';
+    document.getElementById('u-name').textContent=u.displayName||u.email;
+    document.getElementById('u-avatar').textContent=(u.displayName||u.email).charAt(0).toUpperCase();
+    document.getElementById('wvc-frame').src=WVC;
+    document.getElementById('conn-status').textContent='WebVirtCloud: Connected as '+u.email;
+  }else{
+    document.getElementById('overlay').style.display='flex';document.getElementById('auth-load').style.display='none';
+    document.getElementById('auth-btn').style.display='block';
+    document.getElementById('fb-status').textContent='Firebase: Not signed in';document.getElementById('fb-status').className='badge badge-warn';
+    document.getElementById('user-info').style.display='none';
+  }
+});
+
+window.nav=(s,el)=>{
+  document.querySelectorAll('.si').forEach(i=>i.classList.remove('active'));el.classList.add('active');
+  const f=document.getElementById('wvc-frame');
+  const r={wvc:WVC,instances:WVC+'instances/',networks:WVC+'networks/',storages:WVC+'storages/',admin:WVC+'admin/'};
+  if(r[s])f.src=r[s];
+};
+</script>
+</body></html>`;
+}
+
+// ─── Dashboard ─────────────────────────────────────────
+
+function renderDashboard(): string {
+  const domains = FULL_DOMAIN_MAP.map(d => `<a href="https://${d.hostname}" class="domain-card">${d.description.split(' ')[0]} ${d.hostname}</a>`).join('\n');
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RocSpace — AI Dashboard</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0a0f;color:#e2e8f0;min-height:100vh}
+.hero{text-align:center;padding:60px 20px 40px;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e)}.hero h1{font-size:2.5em;font-weight:800;background:linear-gradient(135deg,#60a5fa,#a78bfa,#f472b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}.hero p{color:#94a3b8;margin:12px 0 24px;font-size:1.1em}.hero .tag{display:inline-block;padding:6px 14px;border-radius:20px;font-size:0.8em;margin:4px;background:rgba(96,165,250,0.15);color:#60a5fa;border:1px solid rgba(96,165,250,0.3)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;max-width:1200px;margin:40px auto;padding:0 20px}.card{background:#12121a;border:1px solid #1e1e2e;border-radius:16px;padding:24px;transition:all 0.3s;cursor:pointer;text-decoration:none;color:inherit;display:block}.card:hover{border-color:#60a5fa;box-shadow:0 0 30px rgba(96,165,250,0.1);transform:translateY(-2px)}.card h2{font-size:1.3em;margin-bottom:8px}.card p{color:#94a3b8;font-size:0.9em;line-height:1.6}.card .stat{font-size:2em;font-weight:700;background:linear-gradient(135deg,#34d399,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}.card .label{color:#64748b;font-size:0.8em}
+nav{text-align:center;padding:16px;background:#0f0f17;border-bottom:1px solid #1e1e2e}nav a{color:#94a3b8;text-decoration:none;margin:0 12px;font-size:0.9em;padding:8px 16px;border-radius:8px;transition:0.2s}nav a:hover{color:#60a5fa;background:rgba(96,165,250,0.1)}
+.svc-row{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:#12121a;border:1px solid #1e1e2e;border-radius:12px;margin-bottom:8px}.svc-name{font-weight:600;font-size:0.95em}.svc-detail{color:#64748b;font-size:0.8em;margin-top:2px}.svc-status{padding:4px 12px;border-radius:20px;font-size:0.75em;font-weight:600;white-space:nowrap}.on{background:rgba(52,211,153,0.15);color:#34d399}.warn{background:rgba(251,191,36,0.15);color:#fbbf24}.off{background:rgba(239,68,68,0.15);color:#ef4444}
+.services{max-width:1200px;margin:40px auto;padding:0 20px}.domain-grid{max-width:1200px;margin:40px auto;padding:0 20px}.domain-card{display:inline-block;padding:10px 18px;background:#12121a;border:1px solid #1e1e2e;border-radius:10px;margin:4px;color:#60a5fa;text-decoration:none;font-size:0.85em;font-family:monospace;transition:0.2s}.domain-card:hover{border-color:#60a5fa;background:#1a1a2e}footer{text-align:center;padding:40px;color:#475569;font-size:0.8em}
+</style></head><body>
+<nav><a href="/">🏠 Dashboard</a><a href="/chat-live">💬 Chat Live</a><a href="/chat">🤖 Quick Chat</a><a href="/status">📊 Status</a><a href="/vm">🖥️ VM Console</a></nav>
+<div class="hero"><h1>RocSpace</h1><p>AI Infrastructure · Unified Router · v17.3.0</p>
+<span class="tag">🤖 16 AI Models</span><span class="tag">📡 Solace PubSub+</span><span class="tag">☁️ CF Workers</span><span class="tag">🧠 Cloud Run</span><span class="tag">🖥️ Oracle VM</span><span class="tag">🔥 Firebase</span><span class="tag">🛡️ WebVirtCloud</span></div>
+<div class="grid">
+<a href="/vm" class="card"><h2>🖥️ VM Console</h2><div class="stat">KVM</div><div class="label">WebVirtCloud + Firebase</div><p>VM management · Firebase Auth · noVNC</p></a>
+<a href="/chat-live" class="card"><h2>🔴 Chat Live</h2><div class="stat">16</div><div class="label">AI Models</div><p>Clerk auth · 8 social logins · 3 modes</p></a>
+<a href="/chat" class="card"><h2>💬 Quick Chat</h2><div class="stat">16</div><div class="label">Chat Models</div><p>No login · OpenAI · Gemini · Groq · Qwen</p></a>
+<a href="/monitor" class="card"><h2>📊 Monitor</h2><div class="stat">99%</div><div class="label">Uptime</div><p>Uptime Kuma · Alerts · Status Pages</p></a>
+<a href="https://ai.roadfx.biz.id" class="card"><h2>🧠 AI Engine</h2><div class="stat">5</div><div class="label">Providers</div><p>Groq · OpenRouter · Google · OpenAI</p></a>
+<a href="https://app.roadfx.biz.id" class="card"><h2>📱 Apps Hub</h2><div class="stat">16</div><div class="label">Domains</div><p>Apps · Tools · Skills</p></a>
+</div>
+<div class="services"><h2 style="margin-bottom:16px;font-size:1.3em">🔄 Infrastructure</h2>
+<div class="svc-row"><div><div class="svc-name">WebVirtCloud + Firebase</div><div class="svc-detail">Oracle VM · yttriferous-magpie-16ppv · KVM</div></div><span class="svc-status on">● Running</span></div>
+<div class="svc-row"><div><div class="svc-name">Gateway (hermes-cloudflare)</div><div class="svc-detail">v17.1.1 · 16 models · 5 providers</div></div><span class="svc-status on">● Active</span></div>
+<div class="svc-row"><div><div class="svc-name">CloudRun (ai-vitality)</div><div class="svc-detail">us-west1 · billing issue</div></div><span class="svc-status off">● Down</span></div>
+<div class="svc-row"><div><div class="svc-name">CF Workers (roc-site)</div><div class="svc-detail">v17.3.0 · 16 domains</div></div><span class="svc-status on">● Active</span></div>
+<div class="svc-row"><div><div class="svc-name">Oracle Cloud VM</div><div class="svc-detail">Singapore · 1CPU/16GB · Docker</div></div><span class="svc-status on">● Running</span></div>
+<div class="svc-row"><div><div class="svc-name">Clerk Auth</div><div class="svc-detail">25 origins · 8 social logins</div></div><span class="svc-status on">● Active</span></div>
+<div class="svc-row"><div><div class="svc-name">Firebase Auth</div><div class="svc-detail">yttriferous-magpie-16ppv · Google Sign-in</div></div><span class="svc-status on">● Active</span></div>
+<div class="svc-row"><div><div class="svc-name">Solace PubSub+</div><div class="svc-detail">Singapore · 5 queues</div></div><span class="svc-status on">● Connected</span></div>
+</div>
+<div class="domain-grid"><h2 style="margin-bottom:16px;font-size:1.3em">🌐 Domains (All → roc-site)</h2>${domains}</div>
+<footer>RocSpace by RoadFX AI · 2026 · v17.3.0 · <a href="https://github.com/ivansslo/rocspace" style="color:#60a5fa">GitHub</a></footer>
+</body></html>`;
+}
+
+// ─── Quick Chat ────────────────────────────────────────
+
+function renderQuickChat(): string {
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RocSpace Quick Chat</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:sans-serif;background:#0a0a0f;color:#e2e8f0;height:100vh;display:flex;flex-direction:column}
+nav{padding:12px 20px;background:#0f0f17;border-bottom:1px solid #1e1e2e;display:flex;align-items:center;gap:16px}nav a{color:#94a3b8;text-decoration:none;font-size:0.9em}nav a:hover{color:#60a5fa}nav .brand{font-weight:700;color:#60a5fa;font-size:1.1em}
+#chat{flex:1;overflow-y:auto;padding:20px;max-width:800px;margin:0 auto;width:100%}.msg{margin-bottom:16px;padding:14px 18px;border-radius:14px;max-width:85%;line-height:1.6;font-size:0.95em;white-space:pre-wrap;word-wrap:break-word}.msg.user{background:#1e3a5f;margin-left:auto;border-bottom-right-radius:4px}.msg.bot{background:#1a1a2e;border-bottom-left-radius:4px}
+#input-area{padding:16px;background:#0f0f17;border-top:1px solid #1e1e2e;display:flex;gap:8px;max-width:800px;margin:0 auto;width:100%}#msg-input{flex:1;padding:12px 16px;border-radius:12px;border:1px solid #1e1e2e;background:#12121a;color:#e2e8f0;font-size:0.95em;outline:none}#msg-input:focus{border-color:#60a5fa}#send-btn{padding:12px 24px;border-radius:12px;border:none;background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;font-weight:600;cursor:pointer}#send-btn:hover{opacity:0.9}
+.note{text-align:center;padding:8px;background:#1a1a2e;color:#64748b;font-size:0.8em}a.live{color:#f97316;text-decoration:none}
+</style></head><body>
+<nav><span class="brand">💬 Quick Chat</span><a href="/">🏠 Home</a><a href="/chat-live">🔴 Chat Live</a></nav>
+<div id="chat"><div class="msg bot">Halo! Saya RocSpace AI. Ada yang bisa saya bantu? 🤖</div></div>
+<div class="note">🔓 No login required · <a class="live" href="/chat-live">Chat Live → full features</a></div>
+<div id="input-area"><input id="msg-input" placeholder="Ketik pesan..." onkeydown="if(event.key==='Enter')send()"><button id="send-btn" onclick="send()">Kirim</button></div>
+<script>
+const chat=document.getElementById('chat');const input=document.getElementById('msg-input');
+async function send(){const msg=input.value.trim();if(!msg)return;chat.innerHTML+='<div class="msg user">'+esc(msg)+'</div>';input.value='';
+chat.innerHTML+='<div class="msg bot typing" id="typing">⏳ Thinking...</div>';chat.scrollTop=chat.scrollHeight;
+try{const r=await fetch('/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:msg}],max_tokens:1024})});
+const d=await r.json();const t=document.getElementById('typing');
+if(d.choices&&d.choices[0]){t.classList.remove('typing');t.textContent=d.choices[0].message.content}else{t.textContent='⚠️ Try /chat-live'}}catch(e){document.getElementById('typing').textContent='❌ '+e.message}
+chat.scrollTop=chat.scrollHeight}
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+</script></body></html>`;
+}
+
+// ─── Status ────────────────────────────────────────────
+
+function renderStatus(): string {
+  const date = new Date().toISOString().split('T')[0];
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RocSpace Status</title><meta http-equiv="refresh" content="30">
+<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:monospace;background:#0a0a0f;color:#34d399;padding:20px;max-width:900px;margin:0 auto}h1{color:#60a5fa;margin-bottom:20px}nav{margin-bottom:20px}nav a{color:#60a5fa;text-decoration:none;margin-right:16px}.row{padding:10px 0;border-bottom:1px solid #1e1e2e;display:flex;justify-content:space-between}.ok{color:#34d399}.warn{color:#fbbf24}.err{color:#ef4444}footer{margin-top:40px;color:#475569;font-size:0.8em}</style></head><body>
+<nav><a href="/">🏠 Dashboard</a><a href="/chat-live">💬 Chat Live</a><a href="/vm">🖥️ VM Console</a></nav>
+<h1>📊 RocSpace Status</h1>
+<div class="row"><span>roc-site (Unified Router)</span><span class="ok">● Active · 16 domains</span></div>
+<div class="row"><span>hermes-cloudflare (Gateway)</span><span class="ok">● Active · v17.1.1</span></div>
+<div class="row"><span>WebVirtCloud + Firebase</span><span class="ok">● Running · Oracle VM</span></div>
+<div class="row"><span>Uptime Monitor</span><span class="ok">● Running</span></div>
+<div class="row"><span>CloudRun (ai-vitality)</span><span class="err">● DOWN · billing issue</span></div>
+<div class="row"><span>Clerk Auth</span><span class="ok">● 25 origins · 8 social logins</span></div>
+<div class="row"><span>Firebase Auth</span><span class="ok">● yttriferous-magpie-16ppv</span></div>
+<div class="row"><span>Solace Broker</span><span class="ok">● Connected · Singapore</span></div>
+<div class="row"><span>Oracle VM</span><span class="ok">● Running · Singapore</span></div>
+<div class="row"><span>AI Models</span><span class="ok">● 16 models (5 providers)</span></div>
+<footer>RocSpace · ${date} · v17.3.0</footer>
+</body></html>`;
+}

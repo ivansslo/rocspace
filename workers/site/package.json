@@ -1,0 +1,21 @@
+{
+  "name": "@rocspace/worker-site",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --format=iife --target=es2022 --outfile=dist/index.js --sourcemap",
+    "dev": "wrangler dev",
+    "deploy": "npm run build && wrangler deploy",
+    "deploy:api": "npm run build && node ../../scripts/deploy-worker.mjs site"
+  },
+  "dependencies": {
+    "@rocspace/shared": "*"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250620.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.8.0",
+    "wrangler": "^4.0.0"
+  }
+}

@@ -1,0 +1,6 @@
+name = "roc-site"
+main = "dist/index.js"
+compatibility_date = "2024-12-01"
+
+[vars]
+# Non-secret config — secrets use wrangler secret put

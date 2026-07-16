@@ -1,0 +1,10 @@
+{
+  "name": "@rocspace/worker-gateway",
+  "version": "16.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "build": "node ../../scripts/build-gateway.mjs",
+    "deploy": "node ../../scripts/deploy-worker.mjs"
+  }
+}
