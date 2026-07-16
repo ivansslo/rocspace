@@ -1,4 +1,19 @@
 // workers/gateway/src/index.ts
+import { COMPONENTS, VERSION } from './types';
+import { isAuthed, json, cors, secHTML, reqMeta } from './utils';
+import { aiCall, modelsList } from './ai';
+import { clerkConfig, clerkVerify, clerkUser } from './clerk';
+import { crawl4ai, simpleCrawl } from './crawl';
+import { logEvent, listLogs } from './logs';
+import { solaceEmit, solaceStatus, solaceQueues, solaceService } from './solace';
+import dashboard_default from './pages/dashboard.html';
+import chat_default from './pages/chat.html';
+import crew_default from './pages/crew.html';
+import crawl_default from './pages/crawl.html';
+import zapier_default from './pages/zapier.html';
+import logs_default from './pages/logs.html';
+import dashboard_v18_default from './pages/ui/dashboard-v18.html';
+import orchestrator_default from './pages/ui/orchestrator.html';
 var index_default = {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -9,6 +24,8 @@ var index_default = {
     }
     if (path === "/" || path === "/api") return gatewayInfo(url.origin);
     if (path === "/dashboard") return htmlResponse(env, renderDashboard());
+    if (path === "/dashboard-v18") return htmlResponse(env, renderDashboardV18());
+    if (path === "/orchestrator") return htmlResponse(env, renderOrchestrator());
     if (path === "/chat-live") return htmlResponse(env, renderChatLive());
     if (path === "/crew") return htmlResponse(env, renderCrew());
     if (path === "/crawl4ai" && request.method === "GET") return htmlResponse(env, renderCrawl());
@@ -123,7 +140,7 @@ function htmlResponse(_env, html) {
   return new Response(html, { status: 200, headers: { ...secHTML(), "Access-Control-Allow-Origin": "*" } });
 }
 async function dashboardStatus(env, request) {
-  const out = {
+  const out: any = {
     version: VERSION,
     ts: (/* @__PURE__ */ new Date()).toISOString(),
     providers: {
@@ -150,7 +167,10 @@ async function dashboardStatus(env, request) {
   } catch {
   }
   try {
-    out.logs = await listLogs(env, 10);
+    const lr = await listLogs(env, 10);
+    const ld = JSON.parse(await lr.text());
+    out.logs = (ld.items || []).slice(0, 10);
+    out.logsCount = ld.count || 0;
   } catch {
   }
   return json(out);
@@ -191,6 +211,12 @@ function renderZapier() {
 }
 function renderLogs() {
   return logs_default;
+}
+function renderDashboardV18() {
+  return dashboard_v18_default;
+}
+function renderOrchestrator() {
+  return orchestrator_default;
 }
 export {
   index_default as default

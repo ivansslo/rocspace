@@ -1,4 +1,6 @@
 // workers/gateway/src/ai.ts
+import { json } from './utils';
+import { AI_MODELS } from '@rocspace/shared';
 var GROQ_MODELS = [
   "llama-3.3-70b-versatile",
   "llama-3.1-8b-instant",
@@ -29,7 +31,7 @@ var OPENAI_DIRECT_MODELS = [
   "codex-mini"
 ];
 var OPENAI_OR_MODELS = ["gpt-4o", "gpt-4.1", "gpt-4.1-mini", "gpt-4.1-nano", "gpt-oss-120b"];
-async function aiCall(env, model, messages, maxTokens, stream) {
+export async function aiCall(env, model, messages, maxTokens, stream) {
   let provider;
   let apiKey;
   let baseUrl;
@@ -124,7 +126,7 @@ async function aiCall(env, model, messages, maxTokens, stream) {
     return json({ error: e.message }, 502);
   }
 }
-function modelsList() {
+export function modelsList() {
   return new Response(JSON.stringify({
     object: "list",
     data: AI_MODELS.map((m) => ({

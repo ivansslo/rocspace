@@ -1,5 +1,5 @@
 // workers/gateway/src/types.ts
-var COMPONENTS = [
+export var COMPONENTS = [
   { id: "chat", name: "Chat-Live", desc: "Multi-model AI chat with Clerk auth, streaming, CrewAI, Crawl4AI." },
   { id: "crew", name: "CrewAI", desc: "Multi-agent orchestration (Researcher \u2192 Analyst \u2192 Writer)." },
   { id: "crawl", name: "Crawl4AI", desc: "URL \u2192 clean markdown, extract structured data." },
@@ -14,5 +14,5 @@ var COMPONENTS = [
   { id: "tailscale", name: "Tailscale", desc: "VPN mesh network." },
   { id: "links", name: "Links Hub", desc: "Apps, tools, skills directory." }
 ];
-var VERSION = "17.1.1";
+export var VERSION = "18.0.2";
 

@@ -1,5 +1,6 @@
 // workers/gateway/src/crawl.ts
-async function crawl4ai(request) {
+import { json } from './utils';
+export async function crawl4ai(request) {
   const body = await request.json().catch(() => ({}));
   if (!body.url) return json({ error: "Missing url" }, 400);
   try {
@@ -25,7 +26,7 @@ async function crawl4ai(request) {
     return json({ error: e.message }, 502);
   }
 }
-async function simpleCrawl(request) {
+export async function simpleCrawl(request) {
   const body = await request.json().catch(() => ({}));
   if (!body.url) return json({ error: "Missing url" }, 400);
   try {

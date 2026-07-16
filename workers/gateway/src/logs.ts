@@ -1,5 +1,7 @@
 // workers/gateway/src/logs.ts
-function logEvent(env, type, data, request) {
+import { reqMeta } from './utils';
+import { solaceEmit } from './solace';
+export function logEvent(env, type, data, request) {
   const rec = {
     id: "log-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8),
     type,
@@ -27,7 +29,7 @@ function logEvent(env, type, data, request) {
   }
   return rec;
 }
-async function listLogs(env, limit, type) {
+export async function listLogs(env, limit, type = undefined) {
   limit = Math.min(parseInt(String(limit || 50)), 200);
   const headers = { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" };
   if (env.DB?.prepare) {

@@ -4,7 +4,14 @@
     "types": ["@cloudflare/workers-types"],
     "module": "esnext",
     "target": "es2022",
-    "moduleResolution": "bundler"
+    "moduleResolution": "bundler",
+    "rootDir": "../..",
+    "noEmit": true,
+    "strict": false,
+    "baseUrl": ".",
+    "paths": {
+      "@rocspace/shared": ["../../packages/shared/src/index.ts"]
+    }
   },
   "include": ["src/**/*"]
 }

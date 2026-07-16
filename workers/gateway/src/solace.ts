@@ -1,5 +1,6 @@
 // workers/gateway/src/solace.ts
-function solaceEmit(env, topic, data) {
+import { json } from './utils';
+export function solaceEmit(env, topic, data) {
   if (!env.SOLACE_URL) return;
   fetch(`${env.SOLACE_URL}/topic/${topic}`, {
     method: "POST",
@@ -12,7 +13,7 @@ function solaceEmit(env, topic, data) {
   }).catch(() => {
   });
 }
-async function solaceStatus(env) {
+export async function solaceStatus(env) {
   if (!env.SOLACE_URL) {
     return json({ error: "Solace not configured" }, 503);
   }
@@ -38,7 +39,7 @@ async function solaceStatus(env) {
     return json({ error: e.message, status: "disconnected" }, 502);
   }
 }
-async function solaceQueues(env) {
+export async function solaceQueues(env) {
   if (!env.SOLACE_SEMP_URL || !env.SOLACE_VIEW_USER || !env.SOLACE_VIEW_PASS) {
     return json({ error: "Solace SEMP credentials not configured" }, 503);
   }
@@ -47,7 +48,7 @@ async function solaceQueues(env) {
     const r = await fetch(sempUrl, {
       headers: { "Authorization": "Basic " + btoa(`${env.SOLACE_VIEW_USER}:${env.SOLACE_VIEW_PASS}`) }
     });
-    const d = await r.json();
+    const d: any = await r.json();
     const qs = (d.data || []).map((q) => ({
       name: q.queueName,
       spoolUsage: q.msgSpoolUsage || 0,
@@ -60,12 +61,12 @@ async function solaceQueues(env) {
     return json({ error: e.message }, 502);
   }
 }
-async function solaceService(env) {
+export async function solaceService(env) {
   try {
     const r = await fetch("https://api.solace.cloud/api/v0/services/p37j7q6aggq", {
       headers: { "Authorization": `Bearer ${env.SOLACE_API_TOKEN}` }
     });
-    const d = await r.json();
+    const d: any = await r.json();
     const s = d.data || {};
     return json({
       name: s.name,

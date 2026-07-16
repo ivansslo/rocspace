@@ -9,7 +9,7 @@ export interface ModelInfo {
   id: string;
   label: string;
   emoji: string;
-  provider: 'groq' | 'openrouter' | 'google';
+  provider: 'groq' | 'openrouter' | 'google' | 'openai';
   speed: 'fast' | 'medium' | 'slow';
   thinking?: boolean;
 }
@@ -40,7 +40,7 @@ export const DEFAULT_MODEL = 'llama-3.3-70b-versatile';
 export const ENDPOINTS = {
   GATEWAY: 'https://hermes-cloudflare.certveis.workers.dev', // MUST use internal endpoint to avoid circular loop (roc-site → gateway.roadfx.biz.id → roc-site → 💥)
   CLOUDRUN: 'https://ai-vitality-819208434965.us-west1.run.app', // DOWN (billing OR_BACR2_44) — routes prefer GATEWAY
-  AIS_DEV: 'https://ais-dev-4kbznhxyc5wsr5c6oxw6zz-70765440683.asia-east1.run.app', // Google AI Studio Applet (asia-east1)
+  AIS_DEV: 'https://ais-dev-jqizmthqeu2hdc4e3pgh63-70765440683.asia-east1.run.app', // Google AI Studio Applet (asia-east1)
   CLERK_DOMAIN: 'awake-chicken-95.clerk.accounts.dev',
   SOLACE_BROKER: 'mr-connection-mwc1f9igml1.messaging.solace.cloud',
   SOLACE_VPN: 'roclace-cluster',

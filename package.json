@@ -2,7 +2,7 @@
   "name": "rocspace",
   "version": "1.0.0",
   "private": true,
-  "description": "RocSpace — AI Infrastructure Platform",
+  "description": "RocSpace \u2014 AI Infrastructure Platform",
   "workspaces": [
     "packages/*",
     "workers/*",
@@ -19,10 +19,6 @@
     "deploy": "npm run deploy:gateway && npm run deploy:site",
     "deploy:site": "node scripts/deploy-worker.mjs site --esm",
     "deploy:gateway": "node scripts/deploy-worker.mjs gateway --esm",
-    "deploy:auth": "npm run deploy -w workers/auth",
-    "deploy:ai": "npm run deploy -w workers/ai",
-    "deploy:webhook": "npm run deploy -w workers/webhook",
-    "deploy:r2": "npm run deploy -w workers/r2",
     "deploy:all": "npm run build && npm run deploy"
   },
   "devDependencies": {

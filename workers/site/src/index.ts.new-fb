@@ -1,9 +1,0 @@
-      const cfg={
-        apiKey:"AIzaSyAJBjhU9OEC9vX8jcHX6LUvwXkYOctRYuo",
-        authDomain:"rofai-agent.firebaseapp.com",
-        projectId:"rofai-agent",
-        storageBucket:"rofai-agent.firebasestorage.app",
-        messagingSenderId:"864507972707",
-        appId:"1:864507972707:web:519bc631d36a8f16b17c56",
-        measurementId:"G-6TFBMX7VQ0"
-      };

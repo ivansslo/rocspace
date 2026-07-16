@@ -12,7 +12,7 @@ const CFAT = process.env.CF_API_TOKEN || '';
 const ACCOUNT_ID = '37c44b4d3f192a627d20e46bdf910e79';
 
 // Worker name → CF script name mapping
-const WORKER_MAP: Record<string, string> = {
+const WORKER_MAP = {
   'site': 'roc-site',
   'gateway': 'hermes-cloudflare',
   'auth': 'openauth-certve',
@@ -91,7 +91,7 @@ const resp = await fetch(
   },
 );
 
-const data = await resp.json() as any;
+const data = await resp.json();
 if (data.success) {
   console.log(`✅ ${cfName} deployed | tag: ${data.result?.tag?.slice(0, 8)}... | ESM module`);
 } else {

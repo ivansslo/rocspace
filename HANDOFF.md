@@ -1,5 +1,5 @@
 # 🔄 RocSpace Agent Handoff Document
-> **Terakhir diupdate:** 2026-07-16 · **Versi:** v17.3.1 (site) / v17.1.1 (gateway)
+> **Terakhir diupdate:** 2026-07-16 · **Versi:** v18.0.2 (source rebuild fixed — deploy: v17.3.1 site / v17.1.1 gateway)
 > **Tujuan:** Dokumen ini untuk sesi agent baru agar bisa melanjutkan tanpa kehilangan konteks
 
 ---
