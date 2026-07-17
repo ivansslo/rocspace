@@ -1,0 +1,75 @@
+name: Deploy CF Workers (Hub Tunggal v19)
+
+on:
+  workflow_dispatch:
+    inputs:
+      worker:
+        description: "Worker: 'site' (aman, default) · 'gateway' = ⚠️ upload bindings:[] dapat menghapus secret bindings gateway — pastikan punya salinannya"
+        required: true
+        default: 'site'
+        type: choice
+        options: [site, gateway, all]
+  push:
+    branches: [main]
+    paths:
+      - 'workers/site/**'
+      - 'packages/shared/**'
+      - 'scripts/**'
+      - '.github/workflows/deploy-workers.yml'
+
+jobs:
+  deploy:
+    name: Deploy ${{ github.event.inputs.worker || 'site' }}
+    runs-on: ubuntu-latest
+    env:
+      CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+      CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+      CF_ZONE_ROADFX_BIZ_ID: ${{ secrets.CF_ZONE_ROADFX_BIZ_ID }}
+      GATEWAY_TOKEN: ${{ secrets.GATEWAY_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install deps
+        run: npm ci --no-audit --no-fund || npm install --no-audit --no-fund
+
+      - name: Deploy roc-site
+        if: github.event_name == 'push' || github.event.inputs.worker == 'site' || github.event.inputs.worker == 'all'
+        run: node scripts/deploy-worker.mjs site --esm
+
+      - name: Post-deploy site (custom domain hub + secret guard)
+        if: github.event_name == 'push' || github.event.inputs.worker == 'site' || github.event.inputs.worker == 'all'
+        run: node scripts/post-deploy-site.mjs
+
+      - name: Deploy gateway (⚠️ lihat deskripsi input)
+        if: github.event.inputs.worker == 'gateway' || github.event.inputs.worker == 'all'
+        run: node scripts/deploy-worker.mjs gateway --esm
+
+      - name: Smoke test Hub Tunggal
+        if: github.event_name == 'push' || github.event.inputs.worker == 'site' || github.event.inputs.worker == 'all'
+        run: |
+          set +e
+          echo "== menunggu TLS/propagasi custom domain hub =="
+          code=""
+          for i in $(seq 1 9); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 https://hub.roadfx.biz.id/)
+            [ "$code" = "200" ] && break
+            echo "  percobaan $i → HTTP $code"; sleep 20
+          done
+          echo "hub / → HTTP $code"
+          loc1=$(curl -sI --max-time 15 https://vm.roadfx.biz.id/ | grep -i '^location' | tr -d '\r')
+          loc2=$(curl -sI --max-time 15 https://roadfx.biz.id/ | grep -i '^location' | tr -d '\r')
+          echo "vm./   → ${loc1:-<kosong>}"
+          echo "apex / → ${loc2:-<kosong>}"
+          echo "-- /health (hub) --"
+          curl -s --max-time 15 https://hub.roadfx.biz.id/health | cut -c1-80; echo
+          api=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 https://api.roadfx.biz.id/v1/models)
+          echo "api./v1/models → HTTP $api (BUKAN 301 = API kanonik utuh ✓)"
+          case "$loc1|$loc2" in
+            *hub.roadfx.biz.id*) echo "HUB-REDIRECT-OK";;
+            *) echo "HUB-REDIRECT-BELUM (cek Domains & Routes roc-site di dashboard)";;
+          esac
+          [ "$code" = "200" ] && echo "HUB-HEALTH-OK" || echo "HUB-PENDING (TLS masih diterbitkan — tunggu ~10 menit)"
