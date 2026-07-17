@@ -21,6 +21,10 @@ jobs:
   deploy:
     name: Deploy ${{ github.event.inputs.worker || 'site' }}
     runs-on: ubuntu-latest
+    # Secrets dibaca dari GitHub Environment "deploy" (BUKAN repo Actions secrets) —
+    # isi: CF_API_TOKEN (wajib), CF_ACCOUNT_ID (wajib), CF_ZONE_ROADFX_BIZ_ID (ops), GATEWAY_TOKEN (ops).
+    # Proteksi ekstra: Settings → Environments → deploy → required reviewers/branch.
+    environment: deploy
     env:
       CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
       CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
