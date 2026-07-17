@@ -1,11 +1,32 @@
 # RocSpace Infrastructure Status
-> **Last Updated:** 2026-07-16 · **Version:** v17.3.1 (site) / v17.1.1 (gateway)
+> **Last Updated:** 2026-07-17 · **Version:** v19.0.0 (site) / v18.0.3 (gateway)
+
+## 🛰️ Hub Tunggal (v19.0.0 — 2026-07-17)
+
+Satu situs kanonik untuk semua HALAMAN — **hub.roadfx.biz.id** — menggantikan
+pola mirror 16 subdomain:
+
+- 🔀 **Host lama → 301**: semua halaman (GET/HEAD non-fungsional) di host lama
+  dialihkan permanen ke padanannya di hub (mis. `vm.` → `hub.roadfx.biz.id/vm`).
+  Path dipertahankan, sehingga aset/deep-link lama tetap bekerja lewat hub.
+- ⚡ **API tetap `api.roadfx.biz.id`** (sesuai keputusan). Host `api.`/`gateway.`/`ai.`
+  = mesin murni, tidak disentuh lapisan 301.
+- 🛠️ **Endpoint fungsional host lama tetap hidup**: `/health`, `/api/`, `/v1/`,
+  `/ai/`, `/auth/`, `/gateway/`, `/webhook/`, `/cloudrun/`, `/crawl*`, `/notify*`,
+  `/solace*`, `/.well-known/` — ditandai header `X-ROC-Deprecated-Host`, `X-ROC-Hub`,
+  `Deprecation: true` (deprecated bertahap, opsi 3).
+- 🏥 `/health` (bridge HTTPS → VM via raw TCP socket) kini **host-agnostic**:
+  tersedia juga di `hub.roadfx.biz.id/health`.
+- 🚀 Deploy (butuh token Workers:Edit): `npm run deploy:site` — Custom Domain
+  `hub.roadfx.biz.id` dibuat otomatis oleh wrangler (lihat `workers/site/wrangler.toml`).
+- ✅ Verifikasi pasca-deploy:
+  `curl -sI https://vm.roadfx.biz.id/ | grep -i location` → `https://hub.roadfx.biz.id/vm`
 
 ## 🟢 Active Services
 
 | Service | Status | Details |
 |---------|--------|---------|
-| roc-site (CF Worker) | ✅ Active | v17.3.1 · 16 domains · unified router |
+| roc-site (CF Worker) | ✅ Active | v19.0.0 · Hub Tunggal hub.roadfx.biz.id · host lama 301 |
 | hermes-cloudflare (CF Worker) | ✅ Active | v17.1.1 · 16 AI models · 5 providers |
 | Oracle VM | ✅ Running | Singapore · 1CPU/16GB · Docker stack |
 | WebVirtCloud | ✅ Running | Firebase Auth · signInWithRedirect |

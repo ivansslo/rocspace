@@ -260,6 +260,16 @@ CF_API_TOKEN=your_token node scripts/deploy-worker.mjs gateway --esm
 
 ## 🔄 Changelog
 
+### v19.0.0 — Hub Tunggal (hub.roadfx.biz.id)
+- Satu situs kanonik untuk semua halaman — **tidak ada lagi mirror page**:
+  halaman di 16 host lama → **301** ke padanannya di hub (path dipertahankan)
+- API tetap bernama **api.roadfx.biz.id**; host `api.`/`gateway.`/`ai.` tidak disentuh
+- Endpoint fungsional host lama (`/health`, `/api/`, `/v1/`, `/webhook/`, dst.) tetap
+  hidup + header `X-ROC-Deprecated-Host` (deprecated bertahap)
+- `/health` (bridge VM) kini host-agnostic — juga di `hub.roadfx.biz.id/health`
+- Landing baru `renderHub()` · Custom Domain hub auto-create via wrangler routes
+- Lihat **STATUS.md → Hub Tunggal** untuk detail & verifikasi deploy
+
 ### v17.1.1 — OpenAI Routing Fix
 - Fixed: `openai/gpt-4o` now correctly routes to OpenRouter (was going to OpenAI Direct)
 - Only unprefixed models (e.g. `gpt-4o`) use OpenAI Direct when `OPENAI_KEY` is set

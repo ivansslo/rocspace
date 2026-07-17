@@ -1,15 +1,20 @@
 // ═══════════════════════════════════════════════════════════
-//  roc-site — Unified Router v18.0.3
-//  16 domains → roc-site, WebVirtCloud + Firebase (yttriferous-magpie-16ppv)
+//  roc-site — Unified Router v19.0.0 "Hub Tunggal"
+//  Kanonik: hub.roadfx.biz.id (anti-mirror) · API: api.roadfx.biz.id
+//  17 hosts → roc-site, WebVirtCloud + Firebase (yttriferous-magpie-16ppv)
 // ═══════════════════════════════════════════════════════════
 
-import { ENDPOINTS, DOMAIN_MAP, AI_STUDIO, corsHeaders, jsonResponse, htmlResponse } from '@rocspace/shared';
+import { ENDPOINTS, DOMAIN_MAP, AI_STUDIO, CANONICAL, HUB_SECTIONS, corsHeaders, jsonResponse, htmlResponse } from '@rocspace/shared';
 import { connect } from 'cloudflare:sockets';
 
 const GATEWAY = ENDPOINTS.GATEWAY;
 const CLOUDRUN = ENDPOINTS.CLOUDRUN;
 const AIS_DEV = ENDPOINTS.AIS_DEV;  // New candidate: Google AI Studio Applet (asia-east1)
 const VM_HOST = '161.118.253.28';
+
+// v19: di host lama, prefix FUNGSIONAL ini TIDAK dialihkan (mesin/webhook aman);
+// semua halaman (GET/HEAD lain) di-301-kan ke hub.roadfx.biz.id (anti-mirror).
+const LEGACY_KEEP_PREFIX = ['/api/', '/v1/', '/ai/', '/auth/', '/gateway/', '/webhook/', '/cloudrun/', '/crawl', '/notify', '/solace', '/.well-known/'];
 
 // ─── Oracle VM TCP bridge (Workers fetch() ke IP-literal diblokir CF 1003) ──
 // Raw HTTP/1.1 over TCP socket → mengambil endpoint JSON dari VM (Nginx :80).
@@ -50,6 +55,7 @@ async function vmTcpGet(path: string, timeoutMs = 6000): Promise<string> {
 }
 
 const FULL_DOMAIN_MAP = [
+  { hostname: CANONICAL.HUB, worker: 'site', description: '🛰️ Hub Tunggal (kanonik)' },
   ...DOMAIN_MAP,
   { hostname: 'vm.roadfx.biz.id',      worker: 'site', description: '🖥️ VM Console (WebVirtCloud + Firebase)' },
   { hostname: 'monitor.roadfx.biz.id',  worker: 'site', description: '📊 Uptime Monitor' },
@@ -60,38 +66,78 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
     const host = url.hostname;
-    const gwToken = env.GATEWAY_TOKEN || '';
 
     if (request.method === 'OPTIONS') {
       return new Response(null, { headers: corsHeaders() });
     }
 
-    // ─── VM Console ─────────────────────────────────────
+    // ─── v19: Hub Tunggal (satu situs kanonik, anti-mirror) ─────────
+    // Semua HALAMAN di host lama → 301 ke hub.roadfx.biz.id (path dipertahankan).
+    // Endpoint fungsional (proxy/webhook/health) tetap dilayani di host lama
+    // + ditandai deprecated (opsi 3). Host API (api./gateway./ai.) = mesin
+    // murni → tidak disentuh sama sekali; api.roadfx.biz.id adalah nama API kanonik.
+    const HUB = CANONICAL.HUB;
+    const isApiHost = host.startsWith('api.') || host.startsWith('gateway.') || host.startsWith('ai.');
+    if (host !== HUB && !host.endsWith('.workers.dev') && !isApiHost) {
+      const functional = path === '/health' || LEGACY_KEEP_PREFIX.some(p => path.startsWith(p));
+      if (!functional && (request.method === 'GET' || request.method === 'HEAD')) {
+        const section = HUB_SECTIONS[host.split('.')[0]] ?? '/';
+        const target = path === '/' ? section : path;
+        return Response.redirect(`https://${HUB}${target}${url.search}`, 301);
+      }
+      const resp = await serve(request, env);
+      const h = new Headers(resp.headers);
+      h.set('X-ROC-Deprecated-Host', host);
+      h.set('X-ROC-Hub', `https://${HUB}`);
+      h.set('Deprecation', 'true');
+      return new Response(resp.body, { status: resp.status, headers: h });
+    }
+    return serve(request, env);
+  }
+};
+
+// Pipeline lama (host-agnostic untuk path) — dipakai hub & endpoint fungsional.
+async function serve(request: Request, env: any): Promise<Response> {
+    const url = new URL(request.url);
+    const path = url.pathname;
+    const host = url.hostname;
+    const gwToken = env.GATEWAY_TOKEN || '';
+
+    // ─── Health bridge (v19: host-agnostic — jalan di hub juga) ─────
+    // dashboard/AI Studio page tidak bisa fetch http://IP langsung (mixed
+    // content) → /health di-proxy server-side dari sini. Workers fetch() ke
+    // IP-literal diblokir (CF error 1003) dan token kami Read-only (tak bisa
+    // buat record origin) → pakai raw TCP socket ke Nginx VM.
+    if (path === '/health') {
+      try {
+        const body = await vmTcpGet('/health');
+        return new Response(body, {
+          status: 200,
+          headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders(), 'Cache-Control': 'no-store' },
+        });
+      } catch {
+        return new Response(JSON.stringify({ status: 'down', host: 'roc-vm', error: 'VM unreachable' }), {
+          status: 502,
+          headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders(), 'Cache-Control': 'no-store' },
+        });
+      }
+    }
+
+    // ─── VM Console (legacy host — halamannya kini 301 → hub/vm) ────
     if (host.startsWith('vm.')) {
       if (path === '/' || path === '') return htmlResponse(renderVMConsole());
-      // HTTPS health bridge — dashboard/AI Studio page tidak bisa fetch http://IP
-      // langsung (mixed content), jadi /health di-proxy server-side dari sini.
-      // NB: Workers fetch() ke IP-literal diblokir (CF error 1003) dan token
-      // kita tidak punya izin DNS utk buat record origin → pakai raw TCP socket.
-      if (path === '/health') {
-        try {
-          const body = await vmTcpGet('/health');
-          return new Response(body, {
-            status: 200,
-            headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders(), 'Cache-Control': 'no-store' },
-          });
-        } catch {
-          return new Response(JSON.stringify({ status: 'down', host: 'roc-vm', error: 'VM unreachable' }), {
-            status: 502,
-            headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders(), 'Cache-Control': 'no-store' },
-          });
-        }
-      }
       return Response.redirect(`http://${VM_HOST}/vm${path === '/' ? '/' : path}`, 302);
     }
     if (host.startsWith('monitor.')) {
       return Response.redirect(`http://${VM_HOST}/monitor${path === '/' ? '/' : path}`, 302);
     }
+
+    // ─── Hub exact sections (v19) — bentuk tanpa trailing slash ────
+    if (path === '/ai' || path === '/gateway') return proxyTo(request, GATEWAY, '/', url, gwToken);
+    if (path === '/cloudrun') return proxyTo(request, GATEWAY, '/dashboard', url, gwToken);
+    if (path === '/auth' || path === '/factory' || path === '/r2') return proxyTo(request, GATEWAY, path, url, gwToken);
+    if (path === '/webhook') return proxyTo(request, GATEWAY, path, url, gwToken);
+    if (path === '/app') return Response.redirect(`${url.origin}/links`, 302);
 
     // ─── Path-based VM/Monitor ──────────────────────────
     if (path === '/vm' || path === '/vm/') return htmlResponse(renderVMConsole());
@@ -170,9 +216,9 @@ export default {
     if (path === '/solace/' || path === '/solace/status' || path === '/solace/queues') return proxyTo(request, GATEWAY, path, url);
     if (path.startsWith('/crawl') || path.startsWith('/notify')) return proxyTo(request, GATEWAY, path, url);
 
-    return htmlResponse(renderDashboard());
-  }
-};
+    // v19: hub = landing kanonik; host lain (workers.dev/internal) = dashboard lama
+    return htmlResponse(host === CANONICAL.HUB ? renderHub() : renderDashboard());
+}
 
 async function proxyTo(request: Request, base: string, path: string, url: URL, injectToken?: string): Promise<Response> {
   try {
@@ -268,7 +314,7 @@ iframe{width:100%;height:100%;border:none}
     <iframe id="wvc-frame" src="" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"></iframe>
     <div class="status-bar">
       <span id="conn-status">WebVirtCloud: Waiting for auth...</span>
-      <span>RocSpace v18.0.3 · Firebase yttriferous-magpie-16ppv</span>
+      <span>RocSpace v19.0.0 · Firebase yttriferous-magpie-16ppv</span>
     </div>
   </div>
 </div>
@@ -329,7 +375,7 @@ nav{text-align:center;padding:16px;background:#0f0f17;border-bottom:1px solid #1
 .services{max-width:1200px;margin:40px auto;padding:0 20px}.domain-grid{max-width:1200px;margin:40px auto;padding:0 20px}.domain-card{display:inline-block;padding:10px 18px;background:#12121a;border:1px solid #1e1e2e;border-radius:10px;margin:4px;color:#60a5fa;text-decoration:none;font-size:0.85em;font-family:monospace;transition:0.2s}.domain-card:hover{border-color:#60a5fa;background:#1a1a2e}footer{text-align:center;padding:40px;color:#475569;font-size:0.8em}
 </style></head><body>
 <nav><a href="/">🏠 Dashboard</a><a href="/chat-live">💬 Chat Live</a><a href="/chat">🤖 Quick Chat</a><a href="/status">📊 Status</a><a href="/vm">🖥️ VM Console</a></nav>
-<div class="hero"><h1>RocSpace</h1><p>AI Infrastructure · Unified Router · v18.0.3</p>
+<div class="hero"><h1>RocSpace</h1><p>AI Infrastructure · Unified Router · v19.0.0</p>
 <span class="tag">🤖 16 AI Models</span><span class="tag">📡 Solace PubSub+</span><span class="tag">☁️ CF Workers</span><span class="tag">🧠 Cloud Run</span><span class="tag">🖥️ Oracle VM</span><span class="tag">🔥 Firebase</span><span class="tag">🛡️ WebVirtCloud</span><span class="tag">🎨 AI Studio (rocspace.ai.studio)</span></div>
 <div class="grid">
 <a href="/vm" class="card"><h2>🖥️ VM Console</h2><div class="stat">KVM</div><div class="label">WebVirtCloud + Firebase</div><p>VM management · Firebase Auth · noVNC</p></a>
@@ -342,22 +388,62 @@ nav{text-align:center;padding:16px;background:#0f0f17;border-bottom:1px solid #1
 </div>
 <div class="services"><h2 style="margin-bottom:16px;font-size:1.3em">🔄 Infrastructure</h2>
 <div class="svc-row"><div><div class="svc-name">WebVirtCloud + Firebase</div><div class="svc-detail">Oracle VM · yttriferous-magpie-16ppv · KVM</div></div><span class="svc-status on">● Running</span></div>
-<div class="svc-row"><div><div class="svc-name">Gateway (hermes-cloudflare)</div><div class="svc-detail">v18.0.3 · 16 models · 5 providers</div></div><span class="svc-status on">● Active</span></div>
+<div class="svc-row"><div><div class="svc-name">Gateway (hermes-cloudflare)</div><div class="svc-detail">v19.0.0 · 16 models · 5 providers</div></div><span class="svc-status on">● Active</span></div>
 <div class="svc-row"><div><div class="svc-name">CloudRun (ai-vitality)</div><div class="svc-detail">us-west1 · billing issue</div></div><span class="svc-status off">● Down</span></div>
 <div class="svc-row"><div><div class="svc-name">AIS-DEV (new candidate)</div><div class="svc-detail">asia-east1 · AI Studio Applet (fallback)</div></div><span class="svc-status warn">● Available</span></div>
 <div class="svc-row"><div><div class="svc-name">AI Studio Applet</div><div class="svc-detail">alias: rocspace.ai.studio 🔒 · privat · aistudio.google.com</div></div><span class="svc-status on">● Integrated</span></div>
-<div class="svc-row"><div><div class="svc-name">CF Workers (roc-site)</div><div class="svc-detail">v18.0.3 · 16 domains</div></div><span class="svc-status on">● Active</span></div>
+<div class="svc-row"><div><div class="svc-name">CF Workers (roc-site)</div><div class="svc-detail">v19.0.0 · 16 domains</div></div><span class="svc-status on">● Active</span></div>
 <div class="svc-row"><div><div class="svc-name">Oracle Cloud VM</div><div class="svc-detail">Singapore · 1CPU/16GB · Docker</div></div><span class="svc-status on">● Running</span></div>
 <div class="svc-row"><div><div class="svc-name">Clerk Auth</div><div class="svc-detail">25 origins · 8 social logins</div></div><span class="svc-status on">● Active</span></div>
 <div class="svc-row"><div><div class="svc-name">Firebase Auth</div><div class="svc-detail">yttriferous-magpie-16ppv · Google Sign-in</div></div><span class="svc-status on">● Active</span></div>
 <div class="svc-row"><div><div class="svc-name">Solace PubSub+</div><div class="svc-detail">Singapore · 5 queues</div></div><span class="svc-status on">● Connected</span></div>
 </div>
 <div class="domain-grid"><h2 style="margin-bottom:16px;font-size:1.3em">🌐 Domains (All → roc-site)</h2>${domains}</div>
-<footer>RocSpace by RoadFX AI · 2026 · v18.0.3 · <a href="https://github.com/ivansslo/rocspace" style="color:#60a5fa">GitHub</a></footer>
+<footer>RocSpace by RoadFX AI · 2026 · v19.0.0 · <a href="https://github.com/ivansslo/rocspace" style="color:#60a5fa">GitHub</a></footer>
 </body></html>`;
 }
 
 // ─── Quick Chat ────────────────────────────────────────
+
+// ─── v19: Hub Tunggal — landing kanonik hub.roadfx.biz.id ─────────
+function renderHub(): string {
+  const cards = [
+    { href: '/vm',        icon: '🖥️', title: 'VM Console', stat: 'KVM', label: 'webvirtcloud.ai.studio',    desc: 'WebVirtCloud · Firebase Auth · noVNC' },
+    { href: '/monitor',   icon: '📊', title: 'Monitor',    stat: '99%', label: 'Uptime Kuma',               desc: 'Alerts · status pages' },
+    { href: '/ai',        icon: '🧠', title: 'AI Gateway', stat: '16',  label: 'Models',                    desc: 'Groq · OpenRouter · Google · OpenAI' },
+    { href: '/chat-live', icon: '🔴', title: 'Chat Live',  stat: '🔐',  label: 'Clerk auth',                desc: '8 social logins · 3 modes' },
+    { href: '/chat',      icon: '💬', title: 'Quick Chat', stat: '⚡',  label: 'No login',                  desc: 'Langsung pakai, tanpa akun' },
+    { href: '/status',    icon: '📈', title: 'Status',     stat: '●',   label: 'Live',                      desc: 'Kesehatan seluruh layanan' },
+    { href: '/dashboard', icon: '🎛️', title: 'Dashboard',  stat: '∞',   label: 'Gateway UI',                desc: 'Panel infrastruktur hermes' },
+    { href: '/ais',       icon: '🎨', title: 'AI Studio',  stat: '🚀',  label: 'rocspace.ai.studio 🔒',     desc: 'Applet privat Google AI Studio' },
+    { href: '/links',     icon: '🔗', title: 'Links',      stat: '☰',   label: 'Direktori',                 desc: 'Semua tautan ROC' },
+    { href: '/cloudrun',  icon: '☁️', title: 'Cloud Run',  stat: '—',   label: 'AIS-DEV asia-east1',        desc: 'Proxy applet kandidat baru' },
+  ].map(c => `<a href="${c.href}" class="card"><h2>${c.icon} ${c.title}</h2><div class="stat">${c.stat}</div><div class="label">${c.label}</div><p>${c.desc}</p></a>`).join('\n');
+  const oldHosts = FULL_DOMAIN_MAP.filter(d => d.hostname !== CANONICAL.HUB)
+    .map(d => `<a href="https://${d.hostname}" class="domain-card" title="301 → hub">${d.description.split(' ')[0]} ${d.hostname}</a>`).join('\n');
+  return `<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="canonical" href="https://hub.roadfx.biz.id/"><title>RocSpace Hub — Satu Situs</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0a0f;color:#e2e8f0;min-height:100vh}
+.hero{text-align:center;padding:60px 20px 40px;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e)}.hero h1{font-size:2.5em;font-weight:800;background:linear-gradient(135deg,#60a5fa,#a78bfa,#f472b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}.hero p{color:#94a3b8;margin:12px 0 24px;font-size:1.1em}.hero .tag{display:inline-block;padding:6px 14px;border-radius:20px;font-size:0.8em;margin:4px;background:rgba(96,165,250,0.15);color:#60a5fa;border:1px solid rgba(96,165,250,0.3)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;max-width:1200px;margin:40px auto;padding:0 20px}.card{background:#12121a;border:1px solid #1e1e2e;border-radius:16px;padding:24px;transition:all 0.3s;cursor:pointer;text-decoration:none;color:inherit;display:block}.card:hover{border-color:#60a5fa;box-shadow:0 0 30px rgba(96,165,250,0.1);transform:translateY(-2px)}.card h2{font-size:1.3em;margin-bottom:8px}.card p{color:#94a3b8;font-size:0.9em;line-height:1.6}.card .stat{font-size:2em;font-weight:700;background:linear-gradient(135deg,#34d399,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}.card .label{color:#64748b;font-size:0.8em}
+nav{text-align:center;padding:16px;background:#0f0f17;border-bottom:1px solid #1e1e2e}nav a{color:#94a3b8;text-decoration:none;margin:0 12px;font-size:0.9em;padding:8px 16px;border-radius:8px;transition:0.2s}nav a:hover{color:#60a5fa;background:rgba(96,165,250,0.1)}
+.svc-row{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:#12121a;border:1px solid #1e1e2e;border-radius:12px;margin-bottom:8px}.svc-name{font-weight:600;font-size:0.95em}.svc-detail{color:#64748b;font-size:0.8em;margin-top:2px}.svc-status{padding:4px 12px;border-radius:20px;font-size:0.75em;font-weight:600;white-space:nowrap}.on{background:rgba(52,211,153,0.15);color:#34d399}.warn{background:rgba(251,191,36,0.15);color:#fbbf24}.off{background:rgba(239,68,68,0.15);color:#ef4444}
+.services{max-width:1200px;margin:40px auto;padding:0 20px}.domain-grid{max-width:1200px;margin:40px auto;padding:0 20px}.domain-card{display:inline-block;padding:10px 18px;background:#12121a;border:1px solid #1e1e2e;border-radius:10px;margin:4px;color:#8b93a7;text-decoration:none;font-size:0.85em;font-family:monospace;transition:0.2s}.domain-card:hover{border-color:#60a5fa;color:#60a5fa}footer{text-align:center;padding:40px;color:#475569;font-size:0.8em}
+</style></head><body>
+<nav><a href="/">🏠 Hub</a><a href="/vm">🖥️ VM</a><a href="/monitor">📊 Monitor</a><a href="/ai">🧠 AI</a><a href="/chat">💬 Chat</a><a href="/status">📈 Status</a></nav>
+<div class="hero"><h1>RocSpace Hub</h1><p>Satu situs untuk semuanya · v19.0.0 "Hub Tunggal" · tanpa mirror</p>
+<span class="tag">✅ hub.roadfx.biz.id</span><span class="tag">⚡ API: api.roadfx.biz.id</span><span class="tag">🚫 Anti-mirror</span><span class="tag">🔀 Host lama → 301</span><span class="tag">🧠 antigravity.ai.studio</span></div>
+<div class="grid">${cards}</div>
+<div class="services"><h2 style="margin-bottom:16px;font-size:1.3em">📡 Endpoint & Label</h2>
+<div class="svc-row"><div><div class="svc-name">API kanonik — api.roadfx.biz.id</div><div class="svc-detail">Tetap nama resmi untuk mesin/integrasi (sesuai keputusan)</div></div><span class="svc-status on">● Active</span></div>
+<div class="svc-row"><div><div class="svc-name">/health — bridge HTTPS → VM Oracle</div><div class="svc-detail">Kini host-agnostic: jalan di hub & host lama</div></div><span class="svc-status on">● JSON</span></div>
+<div class="svc-row"><div><div class="svc-name">Label panel</div><div class="svc-detail">webvirtcloud.ai.studio · antigravity.ai.studio · rocspace.ai.studio</div></div><span class="svc-status warn">● Label</span></div>
+</div>
+<div class="domain-grid"><h2 style="margin-bottom:16px;font-size:1.3em">↪️ Host lama (otomatis 301 ke hub)</h2>
+${oldHosts}</div>
+<footer>RocSpace by RoadFX AI · 2026 · v19.0.0 · satu situs kanonik · <a href="https://github.com/ivansslo/rocspace" style="color:#60a5fa">GitHub</a></footer>
+</body></html>`;
+}
 
 function renderQuickChat(): string {
   return `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RocSpace Quick Chat</title>

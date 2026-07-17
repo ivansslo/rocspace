@@ -2,5 +2,15 @@ name = "roc-site"
 main = "src/index.ts"
 compatibility_date = "2024-12-01"
 
+# v19: Hub Tunggal — Custom Domain dibuat otomatis oleh wrangler saat deploy
+# (DNS record + TLS cert auto, butuh zona roadfx.biz.id di akun).
+# Host lama (16 subdomain, terpasang via dashboard) SENGAJA tidak dideklarasikan
+# di sini; worker v19 meng-301-kan halamannya ke hub. Setelah deploy, cek
+# output wrangler: bila route dashboard tidak disebut "kept", verifikasi dengan
+#   curl -sI https://vm.roadfx.biz.id/ | grep -i location
+routes = [
+  { pattern = "hub.roadfx.biz.id", custom_domain = true },
+]
+
 [vars]
 # Non-secret config — secrets use wrangler secret put

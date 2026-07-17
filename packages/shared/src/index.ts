@@ -82,6 +82,22 @@ export const DOMAIN_MAP: DomainMapping[] = [
   { hostname: 'monitor.roadfx.biz.id',  worker: 'site', description: '📊 Uptime Monitor' },
 ];
 
+// ─── v19: Hub Tunggal ────────────────────────────────────
+// Satu situs kanonik untuk semua HALAMAN; api.roadfx.biz.id tetap nama API.
+export const CANONICAL = {
+  HUB: 'hub.roadfx.biz.id',
+  API: 'api.roadfx.biz.id',
+} as const;
+
+// Sub-domain lama → seksi di hub (target 301 untuk root path).
+export const HUB_SECTIONS: Record<string, string> = {
+  'www': '/', 'roadfx': '/', 'dashboard': '/dashboard',
+  'chat': '/chat-live', 'live': '/chat-live', 'status': '/status',
+  'cloudrun': '/cloudrun', 'vm': '/vm', 'monitor': '/monitor',
+  'auth': '/auth', 'factory': '/factory', 'webhook': '/webhook',
+  'r2': '/r2', 'app': '/app', 'ais': '/ais', 'newcr': '/ais', 'ais-dev': '/ais',
+};
+
 // ─── Cloudflare Config ───────────────────────────────────
 // DIBERSIHKAN (v18.0.3): CF_ACCOUNT_ID / CF_ZONE_ID / CLERK_PK tidak lagi
 // di-hardcode di source — skrip membaca dari env (lihat .env.example),
