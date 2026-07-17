@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════
-//  roc-site — Unified Router v19.1.0 "Command Center"
+//  roc-site — Unified Router v19.1.1 "Command Center"
 //  Kanonik: hub.roadfx.biz.id (anti-mirror) · API: api.roadfx.biz.id
 //  17 hosts → roc-site, WebVirtCloud + Firebase (yttriferous-magpie-16ppv)
 // ═══════════════════════════════════════════════════════════
@@ -317,7 +317,7 @@ iframe{width:100%;height:100%;border:none}
     <iframe id="wvc-frame" src="" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"></iframe>
     <div class="status-bar">
       <span id="conn-status">WebVirtCloud: Waiting for auth...</span>
-      <span>RocSpace v19.1.0 · Firebase yttriferous-magpie-16ppv</span>
+      <span>RocSpace v19.1.1 · Firebase yttriferous-magpie-16ppv</span>
     </div>
   </div>
 </div>
@@ -378,7 +378,7 @@ nav{text-align:center;padding:16px;background:#0f0f17;border-bottom:1px solid #1
 .services{max-width:1200px;margin:40px auto;padding:0 20px}.domain-grid{max-width:1200px;margin:40px auto;padding:0 20px}.domain-card{display:inline-block;padding:10px 18px;background:#12121a;border:1px solid #1e1e2e;border-radius:10px;margin:4px;color:#60a5fa;text-decoration:none;font-size:0.85em;font-family:monospace;transition:0.2s}.domain-card:hover{border-color:#60a5fa;background:#1a1a2e}footer{text-align:center;padding:40px;color:#475569;font-size:0.8em}
 </style></head><body>
 <nav><a href="/">🏠 Dashboard</a><a href="/chat-live">💬 Chat Live</a><a href="/chat">🤖 Quick Chat</a><a href="/status">📊 Status</a><a href="/vm">🖥️ VM Console</a></nav>
-<div class="hero"><h1>RocSpace</h1><p>AI Infrastructure · Unified Router · v19.1.0</p>
+<div class="hero"><h1>RocSpace</h1><p>AI Infrastructure · Unified Router · v19.1.1</p>
 <span class="tag">🤖 16 AI Models</span><span class="tag">📡 Solace PubSub+</span><span class="tag">☁️ CF Workers</span><span class="tag">🧠 Cloud Run</span><span class="tag">🖥️ Oracle VM</span><span class="tag">🔥 Firebase</span><span class="tag">🛡️ WebVirtCloud</span><span class="tag">🎨 AI Studio (rocspace.ai.studio)</span></div>
 <div class="grid">
 <a href="/vm" class="card"><h2>🖥️ VM Console</h2><div class="stat">KVM</div><div class="label">WebVirtCloud + Firebase</div><p>VM management · Firebase Auth · noVNC</p></a>
@@ -391,18 +391,18 @@ nav{text-align:center;padding:16px;background:#0f0f17;border-bottom:1px solid #1
 </div>
 <div class="services"><h2 style="margin-bottom:16px;font-size:1.3em">🔄 Infrastructure</h2>
 <div class="svc-row"><div><div class="svc-name">WebVirtCloud + Firebase</div><div class="svc-detail">Oracle VM · yttriferous-magpie-16ppv · KVM</div></div><span class="svc-status on">● Running</span></div>
-<div class="svc-row"><div><div class="svc-name">Gateway (hermes-cloudflare)</div><div class="svc-detail">v19.1.0 · 16 models · 5 providers</div></div><span class="svc-status on">● Active</span></div>
+<div class="svc-row"><div><div class="svc-name">Gateway (hermes-cloudflare)</div><div class="svc-detail">v19.1.1 · 16 models · 5 providers</div></div><span class="svc-status on">● Active</span></div>
 <div class="svc-row"><div><div class="svc-name">CloudRun (ai-vitality)</div><div class="svc-detail">us-west1 · billing issue</div></div><span class="svc-status off">● Down</span></div>
 <div class="svc-row"><div><div class="svc-name">AIS-DEV (new candidate)</div><div class="svc-detail">asia-east1 · AI Studio Applet (fallback)</div></div><span class="svc-status warn">● Available</span></div>
 <div class="svc-row"><div><div class="svc-name">AI Studio Applet</div><div class="svc-detail">alias: rocspace.ai.studio 🔒 · privat · aistudio.google.com</div></div><span class="svc-status on">● Integrated</span></div>
-<div class="svc-row"><div><div class="svc-name">CF Workers (roc-site)</div><div class="svc-detail">v19.1.0 · 16 domains</div></div><span class="svc-status on">● Active</span></div>
+<div class="svc-row"><div><div class="svc-name">CF Workers (roc-site)</div><div class="svc-detail">v19.1.1 · 16 domains</div></div><span class="svc-status on">● Active</span></div>
 <div class="svc-row"><div><div class="svc-name">Oracle Cloud VM</div><div class="svc-detail">Singapore · 1CPU/16GB · Docker</div></div><span class="svc-status on">● Running</span></div>
 <div class="svc-row"><div><div class="svc-name">Clerk Auth</div><div class="svc-detail">25 origins · 8 social logins</div></div><span class="svc-status on">● Active</span></div>
 <div class="svc-row"><div><div class="svc-name">Firebase Auth</div><div class="svc-detail">yttriferous-magpie-16ppv · Google Sign-in</div></div><span class="svc-status on">● Active</span></div>
 <div class="svc-row"><div><div class="svc-name">Solace PubSub+</div><div class="svc-detail">Singapore · 5 queues</div></div><span class="svc-status on">● Connected</span></div>
 </div>
 <div class="domain-grid"><h2 style="margin-bottom:16px;font-size:1.3em">🌐 Domains (All → roc-site)</h2>${domains}</div>
-<footer>RocSpace by RoadFX AI · 2026 · v19.1.0 · <a href="https://github.com/ivansslo/rocspace" style="color:#60a5fa">GitHub</a></footer>
+<footer>RocSpace by RoadFX AI · 2026 · v19.1.1 · <a href="https://github.com/ivansslo/rocspace" style="color:#60a5fa">GitHub</a></footer>
 </body></html>`;
 }
 
@@ -438,13 +438,11 @@ function renderHub(): string {
   ].map(p => `<div class="svc-row"><div><div class="svc-name">${p[0]}</div><div class="svc-detail">${p[2]}</div></div><span class="svc-status warn" data-probe="${p[1]}">● cek…</span></div>`).join('\n');
 
   const repos = [
-    ['rocspace', 'repo ini — hub + shared v19.1.0', '🛰️'],
-    ['Solace-Hermes-Project', 'kandidat sumber gateway hermes-cloudflare', '📡'],
-    ['roadfx-ai-stack', 'stack AI Cloud Run (arsip)', '☁️'],
-    ['ai-vitality', 'Cloud Run ai-vitality — 🔴 DOWN billing OR_BACR2_44', '🧯'],
+    ['rocspace', 'SATU SOURCE AKTIF — hub + gateway + archive/ v19.1.1', '🛰️'],
+    ['rocspace/tree/main/archive', 'arsip 4 repo terhapus: Solace-Hermes · ai-vitality · roadfx-ai-stack · roadfx-full-stack', '📦'],
     ['roc-containers', 'Termux menu/wrapper v1.6.0', '📱'],
     ['roc-agentsroute', 'hermes CLI v5.13.1 "Oracle"', '🧭'],
-    ['Rofwin', 'APK v1.0.1 (9 aset release)', '🎮'],
+    ['Rofwin', 'APK v1.0.1 → v1.1.0 (source baru)', '🎮'],
   ].map(r => `<a href="https://github.com/ivansslo/${r[0]}" class="repo"><span class="ric">${r[2]}</span><span><b>${r[0]}</b><br><small>${r[1]}</small></span></a>`).join('\n');
 
   const oldHosts = FULL_DOMAIN_MAP.filter(d => d.hostname !== CANONICAL.HUB)
@@ -465,7 +463,7 @@ nav{position:sticky;top:0;z-index:10;text-align:center;padding:14px;background:r
 .domain-grid{max-width:1200px;margin:18px auto;padding:0 20px}.domain-card{display:inline-block;padding:9px 16px;background:#101014;border:1px solid #27272a;border-radius:10px;margin:4px;color:#71717a;text-decoration:none;font-size:0.8em;font-family:monospace;transition:0.2s}.domain-card:hover{border-color:#22d3ee;color:#22d3ee}footer{text-align:center;padding:36px;color:#52525b;font-size:0.78em}
 </style></head><body>
 <nav><a href="/">🏠 Hub</a><a href="/vm">🖥️ VM</a><a href="/monitor">📊 Monitor</a><a href="/ai">🧠 AI</a><a href="/chat">💬 Chat</a><a href="/links">🗂️ Directory</a><a href="/status">📈 Status</a></nav>
-<div class="hero"><span class="kick">Command Center · v19.1.0</span>
+<div class="hero"><span class="kick">Command Center · v19.1.1</span>
 <h1>RocSpace Hub</h1><p>Satu situs for semuanya · tanpa mirror · semua kolaborasi tersinkron di sini</p>
 <span class="tag">✅ hub.roadfx.biz.id</span><span class="tag hot">⚡ API: api.roadfx.biz.id</span><span class="tag">🚫 Anti-mirror</span><span class="tag">🔀 Host lama → 301</span>
 <div class="modes">${modes}</div></div>
@@ -486,7 +484,7 @@ nav{position:sticky;top:0;z-index:10;text-align:center;padding:14px;background:r
 <div class="repog">${repos}</div>
 <div class="sec-t">// Host lama (otomatis 301 ke hub)</div>
 <div class="domain-grid">${oldHosts}</div>
-<footer>RocSpace by RoadFX AI · 2026 · v19.1.0 Command Center · satu situs kanonik · <a href="https://github.com/ivansslo/rocspace" style="color:#67e8f9">GitHub</a></footer>
+<footer>RocSpace by RoadFX AI · 2026 · v19.1.1 Command Center · satu situs kanonik · <a href="https://github.com/ivansslo/rocspace" style="color:#67e8f9">GitHub</a></footer>
 <script>
 document.querySelectorAll('[data-probe]').forEach(async el=>{
   const t0=performance.now();
@@ -513,11 +511,11 @@ function renderLinks(): string {
 .services{max-width:900px;margin:0 auto;padding:0 20px}.svc-row{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;background:#101014;border:1px solid #27272a;border-radius:12px;margin-bottom:8px;transition:0.2s}.svc-row:hover{border-color:#22d3ee}.svc-name{font-weight:600;font-size:0.92em}.svc-detail{color:#71717a;font-size:0.76em;margin-top:2px}.svc-status{padding:4px 12px;border-radius:20px;font-size:0.72em;font-weight:700;background:rgba(34,211,238,0.1);color:#67e8f9}
 a{text-decoration:none}footer{text-align:center;padding:36px;color:#52525b;font-size:0.78em}
 </style></head><body>
-<div class="hero"><h1>🗂️ ROC Directory</h1><p>Semua koneksi & integrasi · lokal di worker · v19.1.0 (pengganti /links gateway yang 522)</p></div>
+<div class="hero"><h1>🗂️ ROC Directory</h1><p>Semua koneksi & integrasi · lokal di worker · v19.1.1 (pengganti /links gateway yang 522)</p></div>
 ${sec('// Layanan inti (hub)', row('🖥️ VM Console','WebVirtCloud + Firebase + noVNC','/vm') + row('📊 Monitor','Uptime Kuma via Nginx VM','/monitor') + row('🧠 AI Gateway','16 models · 5 providers','/ai') + row('🔴 Chat Live','Clerk auth penuh','/chat-live') + row('💬 Quick Chat','tanpa login','/chat') + row('📈 Status','status page lokal','/status') + row('🎛️ Dashboard','panel infrastruktur gateway','/dashboard') + row('🎨 AI Studio','applet privat (login Google)',AI_STUDIO.APP))}
 ${sec('// API & endpoint (mesin)', row('⚡ api.roadfx.biz.id','API kanonik — /v1/models dll','https://api.roadfx.biz.id/v1/models') + row('🏥 /health','bridge JSON ke VM','/health') + row('📡 gateway — hermes-cloudflare','workers.dev internal · anti-loop','https://hermes-cloudflare.certveis.workers.dev'))}
 ${sec('// Kolaborasi & label', row('🌐 Tailscale tailnet','roc-vm · rocfx · CPH1823','https://login.tailscale.com/admin/machines') + row('🔥 Firebase planning-with-ai-36675','Firestore + Hosting','https://console.firebase.google.com') + row('☁️ GCP trial $300','budget alert 50/90/100%','https://console.cloud.google.com/billing') + row('🛠️ OCI Console','Run Command → SSH VM','https://cloud.oracle.com'))}
-${sec('// Repositori sumber', row('ivansslo/rocspace','hub + shared (repo ini)','https://github.com/ivansslo/rocspace') + row('ivansslo/Solace-Hermes-Project','sumber gateway','https://github.com/ivansslo/Solace-Hermes-Project') + row('ivansslo/roadfx-ai-stack','stack Cloud Run','https://github.com/ivansslo/roadfx-ai-stack') + row('ivansslo/ai-vitality','Cloud Run down billing 🔴','https://github.com/ivansslo/ai-vitality') + row('ivansslo/roc-containers','Termux v1.6.0','https://github.com/ivansslo/roc-containers') + row('ivansslo/roc-agentsroute','hermes v5.13.1','https://github.com/ivansslo/roc-agentsroute') + row('ivansslo/Rofwin','APK v1.0.1','https://github.com/ivansslo/Rofwin'))}
+${sec('// Repositori sumber (SATU SOURCE)', row('ivansslo/rocspace','SATU SOURCE AKTIF — hub + gateway + archive/','https://github.com/ivansslo/rocspace') + row('↳ archive/','arsip 4 repo terhapus (Solace-Hermes · ai-vitality · roadfx-ai-stack · roadfx-full-stack)','https://github.com/ivansslo/rocspace/tree/main/archive') + row('ivansslo/roc-containers','Termux v1.6.0','https://github.com/ivansslo/roc-containers') + row('ivansslo/roc-agentsroute','hermes v5.13.1','https://github.com/ivansslo/roc-agentsroute') + row('ivansslo/Rofwin','APK v1.1.0','https://github.com/ivansslo/Rofwin'))}
 ${sec('// Eksternal', row('🧠 Termux di HP (roc-menu)','Antigravity udocker localhost:5905','/vm') + row('🏷️ Labels','rocspace.ai.studio · webvirtcloud.ai.studio · antigravity.ai.studio','/'))}
 <footer>RocSpace by RoadFX AI · 2026 · <a href="/" style="color:#67e8f9">← kembali ke Hub</a></footer>
 </body></html>`;
