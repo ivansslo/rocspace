@@ -1,0 +1,10 @@
+{
+  "projectId": "rofai-agent",
+  "appId": "1:864507972707:web:eecc6ffff6eee599b17c56",
+  "apiKey": "███████",
+  "authDomain": "rofai-agent.firebaseapp.com",
+  "firestoreDatabaseId": "ai-studio-aivitality-e17ca973-8dbd-4419-8f5d-6e1dec6bd2ed",
+  "storageBucket": "rofai-agent.firebasestorage.app",
+  "messagingSenderId": "864507972707",
+  "measurementId": ""
+}

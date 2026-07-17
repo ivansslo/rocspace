@@ -1,0 +1,31 @@
+# Dependencies / build
+node_modules/
+dist/
+build/
+coverage/
+
+# Local secrets - never commit
+.env
+.env.*
+!.env.example
+.dev.vars
+*.local
+credentials.md
+*credentials*.md
+secrets.json
+wrangler-secrets.txt
+solace.env
+
+# SSH keys
+.ssh/
+
+# OS / editors
+.DS_Store
+.vscode/
+.idea/
+
+# Wrangler generated
+.wrangler/
+
+# Deployment
+DEPLOYMENT.json

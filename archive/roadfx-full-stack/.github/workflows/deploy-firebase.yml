@@ -1,0 +1,47 @@
+name: Deploy Firebase Hosting
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'firebase-hosting/**'
+  workflow_dispatch:
+
+jobs:
+  deploy-hosting:
+    name: Deploy to Firebase Hosting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Deploy to Firebase Hosting
+        working-directory: firebase-hosting
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          # Option 1: Using Firebase CI token
+          if [ -n "$FIREBASE_TOKEN" ]; then
+            firebase deploy --only hosting --token "$FIREBASE_TOKEN" --non-interactive
+          # Option 2: Using service account JSON
+          elif [ -n "$GOOGLE_APPLICATION_CREDENTIALS" ]; then
+            echo "$GOOGLE_APPLICATION_CREDENTIALS" > sa-key.json
+            export GOOGLE_APPLICATION_CREDENTIALS="$(pwd)/sa-key.json"
+            firebase deploy --only hosting --project planning-with-ai-36675 --non-interactive
+          else
+            echo "❌ Set FIREBASE_TOKEN or FIREBASE_SERVICE_ACCOUNT in repo secrets"
+            exit 1
+          fi
+
+      - name: Output URL
+        run: |
+          echo "🌐 Deployed to: https://planning-with-ai-36675.web.app"
+          echo "🌐 Custom: https://planning-with-ai-36675.firebaseapp.com"

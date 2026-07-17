@@ -1,0 +1,8 @@
+{
+  "name": "Solace Hermes AI",
+  "description": "Event-driven multi-agent AI orchestration hub powered by Solace PubSub+ and Cloudflare Workers",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

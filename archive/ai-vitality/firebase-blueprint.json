@@ -1,0 +1,22 @@
+{
+  "entities": {
+    "Chat": {
+      "title": "Chat Message",
+      "description": "A single chat message saved to Firestore.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "sender": { "type": "string" },
+        "text": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["sender", "text"]
+    }
+  },
+  "firestore": {
+    "/chats/{chatId}": {
+      "schema": "Chat",
+      "description": "Collection of chat messages."
+    }
+  }
+}

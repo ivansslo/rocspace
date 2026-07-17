@@ -1,0 +1,5 @@
+# Deploy ke EXISTING worker: cf-ai-factory
+name = "cf-ai-factory"
+main = "worker.js"
+compatibility_date = "2024-06-20"
+ai = true

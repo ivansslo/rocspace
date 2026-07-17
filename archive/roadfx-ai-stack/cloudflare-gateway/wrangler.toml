@@ -1,0 +1,17 @@
+name = "hermes-cloudflare"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+usage_model = "bundled"
+
+[env.webhook]
+name = "hermes-webhook"
+
+[env.backup]
+name = "certve-webhook"
+
+# Secrets (set via `wrangler secret put` or ../scripts/set-worker-secrets.sh):
+# TOKEN, GROQ_KEY, OR_KEY, OR_PROV_KEY, GEMINI_KEY,
+# CLAW_KEY, CLAWLINK_KEY, TAILSCALE_KEY, HONCHO_KEY,
+# SOLACE_URL, SOLACE_USER, SOLACE_PASS, SOLACE_API_TOKEN,
+# SOLACE_SEMP_URL, SOLACE_VIEW_USER, SOLACE_VIEW_PASS,
+# CLERK_PK, CLERK_SK
