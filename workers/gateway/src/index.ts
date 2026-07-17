@@ -1,5 +1,6 @@
 // workers/gateway/src/index.ts
 import { COMPONENTS, VERSION } from './types';
+import { HUB_NAV_ITEMS } from '@rocspace/shared';
 import { isAuthed, json, cors, secHTML, reqMeta } from './utils';
 import { aiCall, modelsList } from './ai';
 import { clerkConfig, clerkVerify, clerkUser } from './clerk';
@@ -22,16 +23,26 @@ var index_default = {
     if (request.method === "OPTIONS") {
       return new Response(null, { headers: cors() });
     }
+    // The Workers.dev hostname is a private gateway origin. UI pages belong to
+    // the canonical Hub; requests forwarded by roc-site retain X-Forwarded-Host
+    // and continue to be served here without a redirect loop.
+    const forwardedHost = request.headers.get("X-Forwarded-Host");
+    const isDirectGatewayHost = (url.hostname === "hermes-cloudflare.hubfx.workers.dev" || url.hostname === "internal-gateway.roadfx.biz.id") && !forwardedHost;
+    const hubPages = new Set(["/dashboard", "/dashboard-v18", "/orchestrator", "/chat-live", "/crew", "/crawl4ai", "/zapier", "/logs"]);
+    if (isDirectGatewayHost && (request.method === "GET" || request.method === "HEAD") && hubPages.has(path)) {
+      const targetPath = path === "/dashboard-v18" || path === "/orchestrator" ? "/" : path;
+      return Response.redirect(`https://hub.roadfx.biz.id${targetPath}${url.search}`, 301);
+    }
     if (path === "/" || path === "/api") return gatewayInfo(url.origin);
-    if (path === "/dashboard") return htmlResponse(env, renderDashboard());
+    if (path === "/dashboard") return htmlResponse(env, renderDashboard(), 'dashboard');
     if (path === "/dashboard-v18") return htmlResponse(env, renderDashboardV18());
     if (path === "/orchestrator") return htmlResponse(env, renderOrchestrator());
-    if (path === "/chat-live") return htmlResponse(env, renderChatLive());
-    if (path === "/crew") return htmlResponse(env, renderCrew());
-    if (path === "/crawl4ai" && request.method === "GET") return htmlResponse(env, renderCrawl());
-    if (path === "/zapier" && request.method === "GET") return htmlResponse(env, renderZapier());
+    if (path === "/chat-live") return htmlResponse(env, renderChatLive(), 'chatlive');
+    if (path === "/crew") return htmlResponse(env, renderCrew(), 'crew');
+    if (path === "/crawl4ai" && request.method === "GET") return htmlResponse(env, renderCrawl(), 'crawl');
+    if (path === "/zapier" && request.method === "GET") return htmlResponse(env, renderZapier(), 'zapier');
     if (path === "/zapier/template") return zapierTemplate();
-    if (path === "/logs" && request.method === "GET") return htmlResponse(env, renderLogs());
+    if (path === "/logs" && request.method === "GET") return htmlResponse(env, renderLogs(), 'logs');
     if (path === "/links") return Response.redirect("https://app.roadfx.biz.id");
     if (path === "/integrations") return json(COMPONENTS);
     if (path === "/dashboard/status") return dashboardStatus(env, request);
@@ -106,17 +117,17 @@ function gatewayInfo(origin) {
   return json({
     name: "RocSpace Gateway",
     version: VERSION,
-    home: origin + "/dashboard",
+    home: "https://hub.roadfx.biz.id/dashboard",
     live: {
-      dashboard: origin + "/dashboard",
-      chatlive: origin + "/chat-live",
-      chat: origin + "/chat-live",
-      crew: origin + "/crew",
-      crawl: origin + "/crawl4ai",
-      zapier: origin + "/zapier",
-      logs: origin + "/logs",
-      hub: "https://app.roadfx.biz.id",
-      api: origin + "/api"
+      dashboard: "https://hub.roadfx.biz.id/dashboard",
+      chatlive: "https://hub.roadfx.biz.id/chat-live",
+      chat: "https://hub.roadfx.biz.id/chat-live",
+      crew: "https://hub.roadfx.biz.id/crew",
+      crawl: "https://hub.roadfx.biz.id/crawl4ai",
+      zapier: "https://hub.roadfx.biz.id/zapier",
+      logs: "https://hub.roadfx.biz.id/logs",
+      hub: "https://hub.roadfx.biz.id",
+      api: "https://api.roadfx.biz.id"
     },
     components: COMPONENTS,
     endpoints: {
@@ -136,8 +147,26 @@ function gatewayInfo(origin) {
     }
   });
 }
-function htmlResponse(_env, html) {
-  return new Response(html, { status: 200, headers: { ...secHTML(), "Access-Control-Allow-Origin": "*" } });
+function htmlResponse(_env, html, activePage = '') {
+  return new Response(injectGatewayShell(html, activePage), { status: 200, headers: { ...secHTML(), "Access-Control-Allow-Origin": "*" } });
+}
+
+// Gateway UI pages are legacy application documents with different internal
+// layouts. Injecting this small, isolated shell gives every one the canonical
+// Hub menu without rewriting or breaking each app's functional markup.
+function injectGatewayShell(html, activePage) {
+  const nav = JSON.stringify(HUB_NAV_ITEMS);
+  const shell = `<script>(function(){
+    if(document.getElementById('roc-gateway-shell'))return;
+    var items=${nav}, active=${JSON.stringify(activePage)};
+    var groups=['Workspace','Applications','Infrastructure','Manage'];
+    var esc=function(s){return String(s).replace(/[&<>"']/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]})};
+    var links=groups.map(function(group){var entries=items.filter(function(i){return i.group===group});if(!entries.length)return'';return '<div class="label">'+group+'</div>'+entries.map(function(i){return '<a class="item '+(i.id===active?'active':'')+'" href="'+esc(i.href)+'"'+(i.external?' target="_blank" rel="noopener"':'')+'><span>'+esc(i.icon)+'</span>'+esc(i.label)+(i.external?'<em>↗</em>':'')+'</a>'}).join('')}).join('');
+    var host=document.createElement('aside');host.id='roc-gateway-shell';host.setAttribute('aria-label','RocSpace navigation');host.innerHTML='<a class="brand" href="https://hub.roadfx.biz.id/"><b>R</b><span>RocSpace<small>Canonical Hub</small></span></a><nav>'+links+'</nav>';
+    var style=document.createElement('style');style.id='roc-gateway-shell-style';style.textContent='@media(min-width:901px){html{background:#09090b!important}body{margin-left:232px!important;width:calc(100% - 232px)!important}}#roc-gateway-shell{position:fixed;z-index:2147483647;inset:0 auto 0 0;width:232px;padding:17px 11px;background:#0b0b0ff2;border-right:1px solid #292931;box-sizing:border-box;font:12px Inter,system-ui,-apple-system,sans-serif;color:#f4f4f5;overflow-y:auto;box-shadow:12px 0 34px #0004}#roc-gateway-shell *{box-sizing:border-box}#roc-gateway-shell .brand{display:flex;align-items:center;gap:10px;padding:5px 8px 19px;color:#f4f4f5;text-decoration:none;font-weight:800;font-size:15px}#roc-gateway-shell .brand b{display:grid;place-items:center;width:28px;height:28px;border-radius:9px;background:linear-gradient(135deg,#22d3ee,#8b5cf6);color:#09090b}#roc-gateway-shell .brand small{display:block;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#898994;margin-top:2px}#roc-gateway-shell .label{color:#70707b;font-size:9px;font-weight:800;letter-spacing:.11em;text-transform:uppercase;padding:11px 9px 4px}#roc-gateway-shell .item{display:flex;align-items:center;gap:9px;padding:8px 9px;margin:2px 0;border-radius:8px;text-decoration:none;color:#aaaab4}#roc-gateway-shell .item:hover,#roc-gateway-shell .item.active{background:#202027;color:#ecfeff}#roc-gateway-shell .item.active{box-shadow:inset 2px 0 #22d3ee}#roc-gateway-shell .item em{font-style:normal;margin-left:auto;color:#67e8f9}@media(max-width:900px){#roc-gateway-shell{position:sticky;top:0;width:100%;height:auto;min-height:52px;padding:7px 9px;display:flex;align-items:center;gap:8px;overflow-x:auto;border-right:0;border-bottom:1px solid #292931}#roc-gateway-shell .brand{padding:3px 4px;white-space:nowrap}#roc-gateway-shell .brand small,#roc-gateway-shell .label{display:none}#roc-gateway-shell nav{display:flex;gap:3px}#roc-gateway-shell .item{white-space:nowrap;padding:7px 8px;margin:0}#roc-gateway-shell .item span{display:none}}';
+    document.head.appendChild(style);document.body.insertBefore(host,document.body.firstChild);
+  })();</script>`;
+  return html.includes('</body>') ? html.replace('</body>', shell + '</body>') : html + shell;
 }
 async function dashboardStatus(env, request) {
   const out: any = {

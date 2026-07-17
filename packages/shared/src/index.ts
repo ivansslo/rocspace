@@ -38,7 +38,7 @@ export const DEFAULT_MODEL = 'llama-3.3-70b-versatile';
 // ─── Endpoints ───────────────────────────────────────────
 
 export const ENDPOINTS = {
-  GATEWAY: 'https://hermes-cloudflare.certveis.workers.dev', // MUST use internal endpoint to avoid circular loop (roc-site → gateway.roadfx.biz.id → roc-site → 💥)
+  GATEWAY: 'https://internal-gateway.roadfx.biz.id', // Private custom-domain origin for reconstructed gateway Worker
   CLOUDRUN: 'https://ai-vitality-819208434965.us-west1.run.app', // DOWN (billing OR_BACR2_44) — routes prefer GATEWAY
   AIS_DEV: 'https://ais-dev-jqizmthqeu2hdc4e3pgh63-70765440683.asia-east1.run.app', // Google AI Studio Applet (asia-east1)
   CLERK_DOMAIN: 'awake-chicken-95.clerk.accounts.dev',
@@ -88,6 +88,24 @@ export const CANONICAL = {
   HUB: 'hub.roadfx.biz.id',
   API: 'api.roadfx.biz.id',
 } as const;
+
+// One navigation source for the canonical Hub and all gateway pages proxied by it.
+// Use absolute Hub URLs so a UI can never accidentally make the Workers.dev
+// gateway origin its public navigation destination.
+export const HUB_NAV_ITEMS = [
+  { id: 'hub',       icon: '⌘', label: 'Overview',          href: 'https://hub.roadfx.biz.id/',           group: 'Workspace' },
+  { id: 'directory', icon: '◫', label: 'Directory',         href: 'https://hub.roadfx.biz.id/links',       group: 'Workspace' },
+  { id: 'monitor',   icon: '◉', label: 'Monitoring',        href: 'https://hub.roadfx.biz.id/monitor',     group: 'Workspace' },
+  { id: 'status',    icon: '◌', label: 'Status',            href: 'https://hub.roadfx.biz.id/status',      group: 'Workspace' },
+  { id: 'chatlive',  icon: '◈', label: 'Chat Live',         href: 'https://hub.roadfx.biz.id/chat-live',   group: 'Applications' },
+  { id: 'crew',      icon: '◉', label: 'Crew',              href: 'https://hub.roadfx.biz.id/crew',        group: 'Applications' },
+  { id: 'crawl',     icon: '⌁', label: 'Crawl4AI',          href: 'https://hub.roadfx.biz.id/crawl4ai',    group: 'Applications' },
+  { id: 'zapier',    icon: '⚡', label: 'Zapier',            href: 'https://hub.roadfx.biz.id/zapier',      group: 'Applications' },
+  { id: 'logs',      icon: '≡', label: 'Activity Logs',     href: 'https://hub.roadfx.biz.id/logs',        group: 'Applications' },
+  { id: 'vm',        icon: '▣', label: 'VM Console',        href: 'https://hub.roadfx.biz.id/vm',          group: 'Infrastructure' },
+  { id: 'dashboard', icon: '▤', label: 'Gateway dashboard', href: 'https://hub.roadfx.biz.id/dashboard',   group: 'Infrastructure' },
+  { id: 'developer', icon: '⌘', label: 'Developer',         href: 'https://github.com/ivansslo/rocspace',  group: 'Manage', external: true },
+] as const;
 
 // Sub-domain lama → seksi di hub (target 301 untuk root path).
 export const HUB_SECTIONS: Record<string, string> = {

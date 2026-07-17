@@ -117,7 +117,23 @@ export async function aiCall(env, model, messages, maxTokens, stream) {
         }
       });
     }
-    const data = await resp.json();
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) {
+      // Some providers return a one-item error array while others return an
+      // OpenAI-shaped object. Normalize both without exposing request headers
+      // or provider credentials to API clients.
+      const failure = Array.isArray(data) ? (data[0] || {}) : data;
+      const upstream = failure?.error || failure;
+      const message = upstream?.message || `Provider request failed with HTTP ${resp.status}`;
+      return json({
+        error: {
+          message: `${provider} provider unavailable: ${message}`,
+          type: "provider_error",
+          provider,
+          upstream_status: resp.status
+        }
+      }, resp.status === 429 ? 429 : 503);
+    }
     return new Response(JSON.stringify(data), {
       status: resp.status,
       headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }

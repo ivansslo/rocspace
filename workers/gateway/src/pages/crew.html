@@ -120,9 +120,9 @@ body{font-family:system-ui,sans-serif;background:#09090b;color:#fafafa;min-heigh
 
 <div class="sc">&#128279; Connected</div>
 <div class="links">
-<a class="lk" href="https://hermes-cloudflare.certveis.workers.dev/chat-live" target="_blank"><span class="ic">💬</span><div class="in"><h3>Hermes Chat-Live</h3><p>Multi-model AI chat with streaming</p></div><span class="ar">&#8250;</span></a>
-<a class="lk" href="https://hermes-cloudflare.certveis.workers.dev/solace/status" target="_blank"><span class="ic">&#128225;</span><div class="in"><h3>Solace Event Mesh</h3><p>RoClace Cluster &#183; Singapore &#183; 5 queues</p></div><span class="ar">&#8250;</span></a>
-<a class="lk" href="https://rocspace-links.certveis.workers.dev" target="_blank"><span class="ic">&#128279;</span><div class="in"><h3>AI Agent Hub</h3><p>All integrations &#183; 77 models &#183; 1019 tools</p></div><span class="ar">&#8250;</span></a>
+<a class="lk" href="https://hub.roadfx.biz.id/chat-live" target="_blank"><span class="ic">💬</span><div class="in"><h3>Hermes Chat-Live</h3><p>Multi-model AI chat with streaming</p></div><span class="ar">&#8250;</span></a>
+<a class="lk" href="https://api.roadfx.biz.id/solace/status" target="_blank"><span class="ic">&#128225;</span><div class="in"><h3>Solace Event Mesh</h3><p>RoClace Cluster &#183; Singapore &#183; 5 queues</p></div><span class="ar">&#8250;</span></a>
+<a class="lk" href="https://hub.roadfx.biz.id" target="_blank"><span class="ic">&#128279;</span><div class="in"><h3>AI Agent Hub</h3><p>All integrations &#183; 77 models &#183; 1019 tools</p></div><span class="ar">&#8250;</span></a>
 <a class="lk" href="https://github.com/ivansslo/Solace-Hermes-Project" target="_blank"><span class="ic">&#128025;</span><div class="in"><h3>GitHub</h3><p>ivansslo/Solace-Hermes-Project</p></div><span class="ar">&#8250;</span></a>
 </div>
 
@@ -139,7 +139,7 @@ async function runCrew(){
   btn.disabled=true;btn.textContent='Running...';
   res.className='on';res.textContent='Sending to Hermes Gateway → CrewAI agents...\\n\\nResearcher → Analyst → Writer\\nPlease wait...\\n';
   try{
-    var r=await fetch('https://hermes-cloudflare.certveis.workers.dev/solace/task',{
+    var r=await fetch('/solace/task',{
       method:'POST',
       headers:{'Authorization':'Bearer '+(localStorage.getItem('hermes_token')||prompt('Masukkan bearer token Worker')||''),'Content-Type':'application/json'},
       body:JSON.stringify({type:'chat',prompt:'You are a research crew. Research, analyze, and write a report about: '+topic+'. Provide a structured report with: 1) Research findings, 2) Analysis & insights, 3) Recommendations.',model:'llama-3.3-70b-versatile',max_tokens:4096})

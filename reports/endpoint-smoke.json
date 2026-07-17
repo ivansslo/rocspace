@@ -1,0 +1,23 @@
+{
+  "generated_at": "2026-07-18",
+  "credentials_not_stored": true,
+  "gateway": {
+    "status": "healthy",
+    "internal_origin": "internal-gateway.roadfx.biz.id"
+  },
+  "api": {
+    "models": { "status": 200, "count": 16 },
+    "health": { "status": 200 },
+    "chat": {
+      "model": "llama-3.3-70b-versatile",
+      "status": 200,
+      "result": "completion verified"
+    }
+  },
+  "provider_notes": {
+    "groq": "inference verified through canonical gateway; direct catalogue probe is restricted",
+    "openai": "catalogue accessible; direct generation quota/rate limited",
+    "gemini": "catalogue accessible; generation quota/rate limited",
+    "openrouter": "configured but selected test models returned provider unavailable"
+  }
+}

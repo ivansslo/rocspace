@@ -14,7 +14,7 @@ try {
     `--bundle --format=esm --target=es2022 ` +
     `--outfile=${join(distDir, 'index.mjs')} ` +
     `--alias:@rocspace/shared=./packages/shared/src/index.ts ` +
-    `--external:cloudflare:sockets`,
+    `--external:cloudflare:sockets --loader:.html=text`,
     { stdio: 'inherit', cwd }
   );
   console.log('✅ Site built successfully to dist/index.mjs');

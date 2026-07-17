@@ -1,0 +1,10 @@
+{
+  "id": "rocspace/initial",
+  "label": "ROCSPACE-INITIAL",
+  "base_model": "qwen2.5:1.5b",
+  "runtime": "ollama",
+  "access": "private-tailscale-only",
+  "openai_compatible_path": "/v1/chat/completions",
+  "status": "staged_pending_oci_deployment",
+  "public_api_exposure": false
+}

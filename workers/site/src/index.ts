@@ -4,10 +4,23 @@
 //  17 hosts → roc-site, WebVirtCloud + Firebase (yttriferous-magpie-16ppv)
 // ═══════════════════════════════════════════════════════════
 
-import { ENDPOINTS, DOMAIN_MAP, AI_STUDIO, CANONICAL, HUB_SECTIONS, corsHeaders, jsonResponse, htmlResponse } from '@rocspace/shared';
+import { AI_MODELS, ENDPOINTS, DOMAIN_MAP, AI_STUDIO, CANONICAL, HUB_NAV_ITEMS, HUB_SECTIONS, corsHeaders, jsonResponse, htmlResponse } from '@rocspace/shared';
 import { connect } from 'cloudflare:sockets';
+import hubTemplate from './pages/hub.html';
+import monitorTemplate from './pages/monitor.html';
+import chatLiveTemplate from './pages/chat-live.html';
+import landingTemplate from './pages/landing.html';
+import statusTemplate from './pages/status.html';
+import vmTemplate from './pages/vm.html';
+import gatewayDashboardTemplate from '../../gateway/src/pages/dashboard.html';
+import gatewayChatTemplate from '../../gateway/src/pages/chat.html';
+import gatewayCrewTemplate from '../../gateway/src/pages/crew.html';
+import gatewayCrawlTemplate from '../../gateway/src/pages/crawl.html';
+import gatewayZapierTemplate from '../../gateway/src/pages/zapier.html';
+import gatewayLogsTemplate from '../../gateway/src/pages/logs.html';
 
 const GATEWAY = ENDPOINTS.GATEWAY;
+const GATEWAY_LEGACY = ''; // account subdomain is fixed by Cloudflare; no migration fallback active
 const CLOUDRUN = ENDPOINTS.CLOUDRUN;
 const AIS_DEV = ENDPOINTS.AIS_DEV;  // New candidate: Google AI Studio Applet (asia-east1)
 const VM_HOST = '161.118.253.28';
@@ -77,20 +90,18 @@ export default {
     // + ditandai deprecated (opsi 3). Host API (api./gateway./ai.) = mesin
     // murni → tidak disentuh sama sekali; api.roadfx.biz.id adalah nama API kanonik.
     const HUB = CANONICAL.HUB;
-    const isApiHost = host.startsWith('api.') || host.startsWith('gateway.') || host.startsWith('ai.');
+    const isApiHost = host.startsWith('api.');
     if (host !== HUB && !host.endsWith('.workers.dev') && !isApiHost) {
       const functional = path === '/health' || LEGACY_KEEP_PREFIX.some(p => path.startsWith(p));
-      if (!functional && (request.method === 'GET' || request.method === 'HEAD')) {
+      // All machine/API traffic uses one canonical hostname. 308 preserves
+      // method and body for POST webhooks or client API calls.
+      if (functional) return Response.redirect(`https://${CANONICAL.API}${path}${url.search}`, 308);
+      if (request.method === 'GET' || request.method === 'HEAD') {
         const section = HUB_SECTIONS[host.split('.')[0]] ?? '/';
         const target = path === '/' ? section : path;
         return Response.redirect(`https://${HUB}${target}${url.search}`, 301);
       }
-      const resp = await serve(request, env);
-      const h = new Headers(resp.headers);
-      h.set('X-ROC-Deprecated-Host', host);
-      h.set('X-ROC-Hub', `https://${HUB}`);
-      h.set('Deprecation', 'true');
-      return new Response(resp.body, { status: resp.status, headers: h });
+      return Response.redirect(`https://${CANONICAL.API}${path}${url.search}`, 308);
     }
     return serve(request, env);
   }
@@ -102,6 +113,12 @@ async function serve(request: Request, env: any): Promise<Response> {
     const path = url.pathname;
     const host = url.hostname;
     const gwToken = env.GATEWAY_TOKEN || '';
+
+    // Hub is only the UI origin. Route all API-shaped requests to the
+    // canonical API host; API host itself is handled locally below.
+    const crawlUi = path === '/crawl4ai' && request.method === 'GET';
+    const endpointPath = !crawlUi && (path === '/health' || path.startsWith('/api/') || path.startsWith('/v1/') || path.startsWith('/ai/') || path.startsWith('/auth/') || path.startsWith('/gateway/') || path.startsWith('/webhook/') || path.startsWith('/cloudrun/') || path.startsWith('/crawl') || path.startsWith('/notify') || path.startsWith('/solace'));
+    if (host === CANONICAL.HUB && endpointPath) return Response.redirect(`https://${CANONICAL.API}${path}${url.search}`, 308);
 
     // ─── Health bridge (v19: host-agnostic — jalan di hub juga) ─────
     // dashboard/AI Studio page tidak bisa fetch http://IP langsung (mixed
@@ -123,9 +140,22 @@ async function serve(request: Request, env: any): Promise<Response> {
       }
     }
 
+    // ─── Reconstructed sitehub API + application pages ───────────────
+    // The previous gateway Worker was replaced. sitehub is now the only
+    // production Worker, so its public UI pages render locally with the same
+    // canonical sidebar instead of proxying a removed Workers.dev origin.
+    if (host.startsWith('api.')) return localApiResponse(request, url, env);
+    if (path === '/v1/models') return jsonResponse({ object: 'list', data: AI_MODELS.map(m => ({ id: m.id, object: 'model', owned_by: m.provider })) });
+    const localPages: Record<string, SyncNavId> = {
+      '/dashboard': 'dashboard', '/chat-live': 'chatlive', '/crew': 'crew',
+      '/crawl4ai': 'crawl', '/zapier': 'zapier', '/logs': 'logs',
+    };
+    const page = localPages[path];
+    if (page && request.method === 'GET') return htmlResponse(page === 'chatlive' ? renderChatLiveWorkspace() : renderUnifiedApplication(page));
+
     // ─── VM Console (legacy host — halamannya kini 301 → hub/vm) ────
     if (host.startsWith('vm.')) {
-      if (path === '/' || path === '') return htmlResponse(renderVMConsole());
+      if (path === '/' || path === '') return htmlResponse(renderVMWorkspace());
       return Response.redirect(`http://${VM_HOST}/vm${path === '/' ? '/' : path}`, 302);
     }
     if (host.startsWith('monitor.')) {
@@ -134,16 +164,19 @@ async function serve(request: Request, env: any): Promise<Response> {
 
     // ─── Hub exact sections (v19) — bentuk tanpa trailing slash ────
     if (path === '/ai' || path === '/gateway') return proxyTo(request, GATEWAY, '/', url, gwToken);
-    if (path === '/cloudrun') return proxyTo(request, GATEWAY, '/dashboard', url, gwToken);
+    if (path === '/cloudrun') return htmlResponse(renderUnifiedApplication('dashboard'));
     if (path === '/auth' || path === '/factory' || path === '/r2') return proxyTo(request, GATEWAY, path, url, gwToken);
     if (path === '/webhook') return proxyTo(request, GATEWAY, path, url, gwToken);
     if (path === '/app') return Response.redirect(`${url.origin}/links`, 302);
+    if (path === '/api') return Response.redirect(`https://${CANONICAL.API}/`, 302);
 
     // ─── Path-based VM/Monitor ──────────────────────────
-    if (path === '/vm' || path === '/vm/') return htmlResponse(renderVMConsole());
+    if (path === '/vm' || path === '/vm/') return htmlResponse(renderVMWorkspace());
     if (path.startsWith('/vm/')) return Response.redirect(`http://${VM_HOST}${path}`, 302);
-    if (path === '/monitor' || path === '/monitor/') return Response.redirect(`http://${VM_HOST}/monitor/`, 302);
-    if (path.startsWith('/monitor/')) return Response.redirect(`http://${VM_HOST}/monitor${path.substring(9)}`, 302);
+    // The public monitor is rendered locally over HTTPS. It probes the primary
+    // Oracle VM through /health instead of redirecting browsers to its raw HTTP IP.
+    if (path === '/monitor' || path === '/monitor/') return htmlResponse(renderMonitor());
+    if (path.startsWith('/monitor/')) return htmlResponse(renderMonitor());
 
     // ─── AI / API (auto-auth) ───────────────────────────
     if (path.startsWith('/ai/')) return proxyTo(request, GATEWAY, path, url, gwToken);
@@ -181,7 +214,7 @@ async function serve(request: Request, env: any): Promise<Response> {
       return proxyTo(request, GATEWAY, path, url, gwToken);
     }
     if (path === '/profile' || path.startsWith('/profile/')) return Response.redirect(url.origin + '/chat-live#profile', 302);
-    if (path === '/chat') return htmlResponse(renderQuickChat());
+    if (path === '/chat') return Response.redirect(`${url.origin}/chat-live`, 301);
     if (path === '/status') return htmlResponse(renderStatus());
     if (path.startsWith('/api/')) return proxyTo(request, GATEWAY, path, url);
     if (path.startsWith('/auth/')) return proxyTo(request, GATEWAY, path, url);
@@ -215,7 +248,7 @@ async function serve(request: Request, env: any): Promise<Response> {
     if (path === '/crew' || path.startsWith('/crew/') || path === '/crawl4ai' || path.startsWith('/crawl4ai/') ||
         path === '/zapier' || path.startsWith('/zapier/') || path === '/logs' || path.startsWith('/logs/') ||
         path === '/dashboard' || path.startsWith('/dashboard/')) return proxyTo(request, GATEWAY, path, url);
-    if (path === '/links') return host === CANONICAL.HUB ? htmlResponse(renderLinks()) : proxyTo(request, GATEWAY, '/links', url);
+    if (path === '/links') return htmlResponse(renderUnifiedApplication('directory'));
     if (path === '/solace/' || path === '/solace/status' || path === '/solace/queues') return proxyTo(request, GATEWAY, path, url);
     if (path.startsWith('/crawl') || path.startsWith('/notify')) return proxyTo(request, GATEWAY, path, url);
 
@@ -244,7 +277,25 @@ async function proxyTo(request: Request, base: string, path: string, url: URL, i
       newHeaders.set('location', location.replace(/https?:\/\/ai-vitality-[^.]+\.us-west1\.run\.app/g, `https://${url.hostname}`));
     }
     return new Response(resp.body, { status: resp.status, headers: newHeaders });
-  } catch (e: any) { return jsonResponse({ error: e.message }, 502); }
+  } catch (e: any) {
+    // A fallback hook is retained for a future Cloudflare-supported origin
+    // migration. It is disabled unless an alternate internal origin is set.
+    if (base === GATEWAY && GATEWAY_LEGACY) {
+      try {
+        const fallbackTarget = GATEWAY_LEGACY + path + url.search;
+        const fallbackHeaders = new Headers(request.headers);
+        for (const key of ['cf-connecting-ip', 'cf-ipcountry', 'cf-ray', 'cf-visitor', 'cf-worker']) fallbackHeaders.delete(key);
+        fallbackHeaders.set('X-Forwarded-Host', url.hostname);
+        fallbackHeaders.set('X-Forwarded-Proto', url.protocol.replace(':', ''));
+        if (injectToken && !fallbackHeaders.get('Authorization')) fallbackHeaders.set('Authorization', `Bearer ${injectToken}`);
+        const fallback = await fetch(fallbackTarget, { method: request.method, headers: fallbackHeaders, body: request.method !== 'GET' && request.method !== 'HEAD' ? request.body : undefined });
+        const fallbackResponseHeaders = new Headers(fallback.headers);
+        fallbackResponseHeaders.set('Access-Control-Allow-Origin', '*');
+        return new Response(fallback.body, { status: fallback.status, headers: fallbackResponseHeaders });
+      } catch { /* primary error returned below */ }
+    }
+    return jsonResponse({ error: e.message }, 502);
+  }
 }
 
 // ─── VM Console (Firebase bridge - yttriferous-magpie-16ppv) ──
@@ -300,9 +351,7 @@ iframe{width:100%;height:100%;border:none}
     <div class="si" onclick="nav('storages',this)">💾 Storages</div>
     <div class="si" onclick="nav('admin',this)">⚙️ Admin</div>
     <hr style="border-color:#334155;margin:12px 16px">
-    <div class="si" onclick="window.open('https://ai.roadfx.biz.id','_blank')">🧠 AI Gateway</div>
-    <div class="si" onclick="window.open('https://roadfx.biz.id','_blank')">🏠 Home</div>
-    <div class="si" onclick="window.open('https://monitor.roadfx.biz.id','_blank')">📊 Monitor</div>
+${renderVmSyncMenu()}
   </div>
   <div class="main">
     <div class="overlay" id="overlay">
@@ -412,91 +461,91 @@ nav{text-align:center;padding:16px;background:#0f0f17;border-bottom:1px solid #1
 // Gaya mengikuti template "full-stack-dashboard" (zinc-950, neon cyan/fuchsia,
 // agent orchestra 8 mode) · sinkron live via fetch · tanpa mirror.
 function renderHub(): string {
-  const cards = [
-    { href: '/vm',        icon: '🖥️', title: 'VM Console', stat: 'KVM', label: 'webvirtcloud.ai.studio',    desc: 'WebVirtCloud · Firebase Auth · noVNC' },
-    { href: '/monitor',   icon: '📊', title: 'Monitor',    stat: '99%', label: 'Uptime Kuma',               desc: 'Alerts · status pages' },
-    { href: '/ai',        icon: '🧠', title: 'AI Gateway', stat: '16',  label: 'Models',                    desc: 'Groq · OpenRouter · Google · OpenAI' },
-    { href: '/chat-live', icon: '🔴', title: 'Chat Live',  stat: '🔐',  label: 'Clerk auth',                desc: '8 social logins · 3 modes' },
-    { href: '/chat',      icon: '💬', title: 'Quick Chat', stat: '⚡',  label: 'No login',                  desc: 'Langsung pakai, tanpa akun' },
-    { href: '/status',    icon: '📈', title: 'Status',     stat: '●',   label: 'Live',                      desc: 'Kesehatan seluruh layanan' },
-    { href: '/dashboard', icon: '🎛️', title: 'Dashboard',  stat: '∞',   label: 'Gateway UI',                desc: 'Panel infrastruktur hermes' },
-    { href: '/links',     icon: '🗂️', title: 'Directory',  stat: '☰',   label: 'Lokal v19.1',               desc: 'Semua koneksi & integrasi ROC (tidak lagi via gateway 522)' },
-    { href: '/cloudrun',  icon: '☁️', title: 'Cloud Run',  stat: '—',   label: 'via gateway',               desc: 'ai-vitality DOWN (billing) → fallback' },
-  ].map(c => `<a href="${c.href}" class="card"><h2>${c.icon} ${c.title}</h2><div class="stat">${c.stat}</div><div class="label">${c.label}</div><p>${c.desc}</p></a>`).join('\n');
+  // Fresh public landing. Operational navigation remains available from the
+  // Command Center and all workspace pages.
+  return landingTemplate;
+}
 
-  const modes = [
-    ['🎯','task','Task Planner'],['💻','code','Code Builder'],['🧠','think','Deep Thinker'],
-    ['🛡️','ground','Grounding Analyst'],['🔨','hack','Security Reviewer'],['🔎','research','Research Scout'],
-    ['🪄','sculp','UX Sculptor'],['🔬','ask','Clarifying Agent'],
-  ].map(m => `<a href="/chat-live" class="mode" title="${m[2]}"><span>${m[0]}</span>${m[1]}</a>`).join('');
+function renderMonitor(): string {
+  return monitorTemplate.replace('<!-- ROC_SIDEBAR -->', renderSyncSidebar('monitor'));
+}
 
-  const probes = [
-    ['VM Bridge (Oracle roc-vm)', '/health', 'hub · raw TCP socket → Nginx'],
-    ['API kanonik (16 models)', 'https://api.roadfx.biz.id/v1/models', 'api.roadfx.biz.id'],
-    ['Chat Live (Clerk)', '/chat-live', 'via hermes-cloudflare'],
-    ['Status page', '/status', 'render lokal worker'],
-  ].map(p => `<div class="svc-row"><div><div class="svc-name">${p[0]}</div><div class="svc-detail">${p[2]}</div></div><span class="svc-status warn" data-probe="${p[1]}">● cek…</span></div>`).join('\n');
+function renderVMWorkspace(): string {
+  return vmTemplate.replace('<!-- ROC_SIDEBAR -->', renderSyncSidebar('vm'));
+}
 
-  const repos = [
-    ['rocspace', 'SATU SOURCE AKTIF — hub + gateway + archive/ v19.1.1', '🛰️'],
-    ['rocspace/tree/main/archive', 'arsip 4 repo terhapus: Solace-Hermes · ai-vitality · roadfx-ai-stack · roadfx-full-stack', '📦'],
-    ['roc-containers', 'Termux menu/wrapper v1.6.0', '📱'],
-    ['roc-agentsroute', 'hermes CLI v5.13.1 "Oracle"', '🧭'],
-    ['Rofwin', 'APK v1.0.1 → v1.1.0 (source baru)', '🎮'],
-  ].map(r => `<a href="https://github.com/ivansslo/${r[0]}" class="repo"><span class="ric">${r[2]}</span><span><b>${r[0]}</b><br><small>${r[1]}</small></span></a>`).join('\n');
+function renderStatus(): string {
+  return statusTemplate.replace('<!-- ROC_SIDEBAR -->', renderSyncSidebar('status'));
+}
 
-  const oldHosts = FULL_DOMAIN_MAP.filter(d => d.hostname !== CANONICAL.HUB)
-    .map(d => `<a href="https://${d.hostname}" class="domain-card" title="301 → hub">${d.description.split(' ')[0]} ${d.hostname}</a>`).join('\n');
+function renderChatLiveWorkspace(active: SyncNavId = 'chatlive'): string {
+  return chatLiveTemplate.replace('<!-- ROC_SIDEBAR -->', renderSyncSidebar(active));
+}
 
-  return `<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<link rel="canonical" href="https://hub.roadfx.biz.id/"><title>RocSpace Hub — Command Center</title>
-<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#09090b;color:#e4e4e7;min-height:100vh}
-.hero{text-align:center;padding:64px 20px 44px;background:radial-gradient(circle_at_top,rgba(34,211,238,0.14),transparent 42%),linear-gradient(135deg,#09090b,#18181b)}.hero .kick{display:inline-block;font-size:0.72em;letter-spacing:0.35em;text-transform:uppercase;color:#22d3ee;border:1px solid rgba(34,211,238,0.3);border-radius:20px;padding:6px 16px;margin-bottom:16px}
-.hero h1{font-size:2.6em;font-weight:900;letter-spacing:-0.02em;background:linear-gradient(135deg,#22d3ee,#e879f9);-webkit-background-clip:text;-webkit-text-fill-color:transparent}.hero p{color:#a1a1aa;margin:12px 0 22px;font-size:1.05em}.tag{display:inline-block;padding:5px 14px;border-radius:20px;font-size:0.78em;margin:4px;background:rgba(34,211,238,0.1);color:#67e8f9;border:1px solid rgba(34,211,238,0.25)}
-.tag.hot{background:rgba(232,121,249,0.1);color:#f0abfc;border-color:rgba(232,121,249,0.25)}
-nav{position:sticky;top:0;z-index:10;text-align:center;padding:14px;background:rgba(9,9,11,0.85);backdrop-filter:blur(8px);border-bottom:1px solid #27272a}nav a{color:#a1a1aa;text-decoration:none;margin:0 10px;font-size:0.88em;padding:7px 14px;border-radius:9px;transition:0.2s}nav a:hover{color:#22d3ee;background:rgba(34,211,238,0.08)}
-.modes{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:1000px;margin:26px auto 0;padding:0 20px}.mode{display:flex;align-items:center;gap:7px;padding:8px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);color:#d4d4d8;text-decoration:none;font-size:0.8em;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;transition:0.2s}.mode span{font-size:1.05em}.mode:hover{border-color:rgba(34,211,238,0.4);background:rgba(34,211,238,0.08)}
-.sec-t{max-width:1200px;margin:44px auto 0;padding:0 20px;font-size:0.75em;letter-spacing:0.3em;text-transform:uppercase;color:#22d3ee}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:18px;max-width:1200px;margin:18px auto;padding:0 20px}.card{background:#101014;border:1px solid #27272a;border-radius:16px;padding:22px;transition:all 0.25s;text-decoration:none;color:inherit;display:block}.card:hover{border-color:#22d3ee;box-shadow:0 0 30px rgba(34,211,238,0.12);transform:translateY(-2px)}.card h2{font-size:1.2em;margin-bottom:6px}.card p{color:#a1a1aa;font-size:0.86em;line-height:1.55}.card .stat{font-size:1.8em;font-weight:800;background:linear-gradient(135deg,#22d3ee,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent}.card .label{color:#71717a;font-size:0.76em}
-.svc-row{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;background:#101014;border:1px solid #27272a;border-radius:12px;margin-bottom:8px}.svc-name{font-weight:600;font-size:0.92em}.svc-detail{color:#71717a;font-size:0.76em;margin-top:2px}.svc-status{padding:4px 12px;border-radius:20px;font-size:0.72em;font-weight:700;white-space:nowrap}.on{background:rgba(74,222,128,0.12);color:#4ade80}.warn{background:rgba(250,204,21,0.12);color:#facc15}.off{background:rgba(248,113,113,0.12);color:#f87171}
-.services{max-width:1200px;margin:18px auto;padding:0 20px}.repog{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px;max-width:1200px;margin:18px auto;padding:0 20px}.repo{display:flex;gap:12px;align-items:center;background:#101014;border:1px solid #27272a;border-radius:12px;padding:14px 16px;color:inherit;text-decoration:none;font-size:0.86em;transition:0.2s}.repo small{color:#71717a}.repo:hover{border-color:#e879f9}.repo .ric{font-size:1.35em}
-.domain-grid{max-width:1200px;margin:18px auto;padding:0 20px}.domain-card{display:inline-block;padding:9px 16px;background:#101014;border:1px solid #27272a;border-radius:10px;margin:4px;color:#71717a;text-decoration:none;font-size:0.8em;font-family:monospace;transition:0.2s}.domain-card:hover{border-color:#22d3ee;color:#22d3ee}footer{text-align:center;padding:36px;color:#52525b;font-size:0.78em}
-</style></head><body>
-<nav><a href="/">🏠 Hub</a><a href="/vm">🖥️ VM</a><a href="/monitor">📊 Monitor</a><a href="/ai">🧠 AI</a><a href="/chat">💬 Chat</a><a href="/links">🗂️ Directory</a><a href="/status">📈 Status</a></nav>
-<div class="hero"><span class="kick">Command Center · v19.1.1</span>
-<h1>RocSpace Hub</h1><p>Satu situs for semuanya · tanpa mirror · semua kolaborasi tersinkron di sini</p>
-<span class="tag">✅ hub.roadfx.biz.id</span><span class="tag hot">⚡ API: api.roadfx.biz.id</span><span class="tag">🚫 Anti-mirror</span><span class="tag">🔀 Host lama → 301</span>
-<div class="modes">${modes}</div></div>
-<div class="sec-t">// Layanan</div>
-<div class="grid">${cards}</div>
-<div class="sec-t">// Sinkron · live probe</div>
-<div class="services">${probes}</div>
-<div class="sec-t">// Integrasi & kolaborasi</div>
-<div class="services">
-<div class="svc-row"><div><div class="svc-name">API kanonik — api.roadfx.biz.id</div><div class="svc-detail">Satu-satunya nama resmi untuk mesin/integrasi (keputusan final)</div></div><span class="svc-status on">● Active</span></div>
-<div class="svc-row"><div><div class="svc-name">/health — bridge HTTPS → VM Oracle</div><div class="svc-detail">Host-agnostic · raw TCP socket (CF 1003 workaround)</div></div><span class="svc-status on">● JSON</span></div>
-<div class="svc-row"><div><div class="svc-name">Label kolaborasi</div><div class="svc-detail">rocspace.ai.studio · webvirtcloud.ai.studio · antigravity.ai.studio</div></div><span class="svc-status warn">● Label</span></div>
-<div class="svc-row"><div><div class="svc-name">AI Studio applet (privat)</div><div class="svc-detail"><a href="${AI_STUDIO.APP}" style="color:#67e8f9">rocspace.ai.studio → applet Google AI Studio</a> · login Google pemilik</div></div><span class="svc-status on">● Link</span></div>
-<div class="svc-row"><div><div class="svc-name">Tailscale tailnet</div><div class="svc-detail">roc-vm 100.93.139.73 · rocfx (HP) · CPH1823</div></div><span class="svc-status on">● Mesh</span></div>
-<div class="svc-row"><div><div class="svc-name">Firebase + GCP trial $300</div><div class="svc-detail">planning-with-ai-36675 · budget alert aktif</div></div><span class="svc-status warn">● Trial</span></div>
-</div>
-<div class="sec-t">// Repositori sumber (anti-mirror: tautan, bukan duplikat)</div>
-<div class="repog">${repos}</div>
-<div class="sec-t">// Host lama (otomatis 301 ke hub)</div>
-<div class="domain-grid">${oldHosts}</div>
-<footer>RocSpace by RoadFX AI · 2026 · v19.1.1 Command Center · satu situs kanonik · <a href="https://github.com/ivansslo/rocspace" style="color:#67e8f9">GitHub</a></footer>
-<script>
-document.querySelectorAll('[data-probe]').forEach(async el=>{
-  const t0=performance.now();
-  try{
-    const r=await fetch(el.dataset.probe,{cache:'no-store'});
-    const ms=Math.round(performance.now()-t0);
-    if(r.ok){el.textContent='● online · '+ms+'ms';el.className='svc-status on'}
-    else{el.textContent='● HTTP '+r.status;el.className='svc-status off'}
-  }catch{el.textContent='● unreachable';el.className='svc-status off'}
-});
-</script>
-</body></html>`;
+function renderUnifiedApplication(active: SyncNavId): string {
+  const pages: Record<string, { eyebrow: string; title: string; description: string; primary: string; primaryHref: string; stats: [string, string, string][]; cards: [string, string, string][] }> = {
+    directory: { eyebrow: 'Navigation workspace', title: 'RocSpace directory', description: 'A clean canonical directory for applications, infrastructure, and machine endpoints.', primary: 'Open API catalog', primaryHref: 'https://api.roadfx.biz.id/v1/models', stats: [['UI','Canonical Hub'],['Models','16'],['Primary','Oracle VM']], cards: [['Chat Live','Canonical AI workspace','/chat-live'],['Monitor','Primary infrastructure signals','/monitor'],['Developer','Repository and integration reference','https://github.com/ivansslo/rocspace']] },
+    dashboard: { eyebrow: 'Infrastructure workspace', title: 'Gateway dashboard', description: 'Unified service overview for the canonical Hub.', primary: 'Open monitoring', primaryHref: '/monitor', stats: [['Primary server','Oracle VM'],['Models','16'],['API','api.roadfx.biz.id']], cards: [['Monitor','Live VM and Hub checks','/monitor'],['Status','Public service status','/status'],['API catalog','View available models','https://api.roadfx.biz.id/v1/models']] },
+    chatlive: { eyebrow: 'AI workspace', title: 'Chat Live', description: 'Canonical AI conversation workspace. Provider-backed completion endpoints are restored separately from the UI shell.', primary: 'Open Chat Live', primaryHref: '/chat-live', stats: [['Mode','Live'],['Models','16 listed'],['Endpoint','API canonical']], cards: [['Chat Live','Use the canonical AI workspace','/chat-live'],['Model catalog','Inspect the current catalog','https://api.roadfx.biz.id/v1/models'],['Developer','Integration reference and source','https://github.com/ivansslo/rocspace']] },
+    crew: { eyebrow: 'Automation workspace', title: 'Crew orchestration', description: 'Plan, research, build, review, and operate tasks from one canonical Hub surface.', primary: 'Open Developer', primaryHref: 'https://github.com/ivansslo/rocspace', stats: [['Stages','Plan → Review'],['Primary','Oracle VM'],['Events','API endpoint']], cards: [['Monitor','Confirm infrastructure health','/monitor'],['API','Machine endpoint reference','https://api.roadfx.biz.id/'],['Activity logs','Operational log workspace','/logs']] },
+    crawl: { eyebrow: 'Data workspace', title: 'Crawl4AI', description: 'URL extraction and crawl workflows are centralized in the canonical application surface.', primary: 'View API', primaryHref: 'https://api.roadfx.biz.id/', stats: [['Operation','Crawl'],['Auth','API canonical'],['Output','Structured data']], cards: [['Developer','Implementation and endpoint reference','https://github.com/ivansslo/rocspace'],['Status','Check service availability','/status'],['Zapier','Automation workflow template','/zapier']] },
+    zapier: { eyebrow: 'Integration workspace', title: 'Zapier automation', description: 'Webhook and automation integrations use the canonical API hostname.', primary: 'Open API', primaryHref: 'https://api.roadfx.biz.id/', stats: [['Flow','Clerk → Zapier'],['Target','API canonical'],['Events','Webhook']], cards: [['Developer','Webhook integration reference','https://github.com/ivansslo/rocspace'],['Crew','Automation orchestration','/crew'],['Status','Check the public service state','/status']] },
+    logs: { eyebrow: 'Operations workspace', title: 'Activity logs', description: 'Operational events and machine endpoints are centralized through the Hub and API split.', primary: 'Open monitoring', primaryHref: '/monitor', stats: [['Source','sitehub'],['Primary','Oracle VM'],['API','Centralized']], cards: [['Monitor','Live service probes','/monitor'],['Status','Public availability status','/status'],['Developer','Source and integration reference','https://github.com/ivansslo/rocspace']] },
+  };
+  const page = pages[active] || pages.dashboard;
+  const stats = page.stats.map(([label, value]) => `<article class="stat"><span>${label}</span><b>${value}</b></article>`).join('');
+  const cards = page.cards.map(([title, text, href]) => `<a class="card" href="${href}"${href.startsWith('http') ? ' target="_blank" rel="noopener"' : ''}><b>${title}</b><p>${text}</p><small>Open →</small></a>`).join('');
+  return `<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${page.title} — RocSpace</title><style>:root{--bg:#09090b;--panel:#121217;--line:#292930;--text:#f4f4f5;--muted:#a1a1aa;--cyan:#22d3ee;--violet:#a78bfa;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse 840px 430px at 58% -150px,#1c2437 0%,transparent 70%),var(--bg);color:var(--text)}.shell{min-height:100vh;display:grid;grid-template-columns:250px 1fr}.sidebar{position:fixed;inset:0 auto 0 0;width:250px;padding:18px 12px;background:#0b0b0edb;border-right:1px solid var(--line);backdrop-filter:blur(16px);display:flex;flex-direction:column}.brand{display:flex;gap:10px;align-items:center;color:var(--text);text-decoration:none;padding:7px 10px 24px}.brand .mark{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--cyan),var(--violet));color:#09090b;font-weight:900}.brand b{font-size:16px}.brand small{display:block;color:#777783;font-size:10px;letter-spacing:.09em;text-transform:uppercase}.section-label{color:#707078;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:13px 10px 5px}.nav a{display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;margin:2px 0;color:#a1a1aa;text-decoration:none;font-size:12px}.nav a:hover,.nav a.active{background:#202027;color:#ecfeff}.nav a.active{box-shadow:inset 2px 0 var(--cyan)}.nav .ico{width:18px;text-align:center}.nav .pill{margin-left:auto;color:#67e8f9;font-size:10px}.sidebar-bottom{margin-top:auto;border-top:1px solid var(--line);padding:14px 10px 4px;font-size:11px;color:#a1a1aa}.sidebar-bottom b{display:block;color:#e4e4e7}.main{grid-column:2}.top{height:66px;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 30px;color:#8d8d97;font-size:12px;background:#09090bdd;backdrop-filter:blur(15px)}.top b{color:#e4e4e7}.content{max-width:1160px;margin:auto;padding:38px 30px}.eyebrow{color:var(--cyan);font-size:10px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}.hero{display:flex;justify-content:space-between;align-items:end;gap:18px;margin:10px 0 28px}.hero h1{font-size:32px;letter-spacing:-1px;margin:0}.hero p{color:var(--muted);max-width:610px;margin:8px 0 0;line-height:1.6;font-size:13px}.button{display:inline-block;background:#0d3036;border:1px solid #24515a;color:#cffafe;border-radius:8px;padding:9px 12px;text-decoration:none;font-weight:700;font-size:12px;white-space:nowrap}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.stat,.card{background:linear-gradient(145deg,#16161b,#101014);border:1px solid var(--line);border-radius:14px}.stat{padding:17px}.stat span{display:block;color:var(--muted);font-size:11px}.stat b{display:block;font-size:22px;letter-spacing:-.6px;margin-top:8px}.section-title{font-size:12px;color:#a1a1aa;text-transform:uppercase;letter-spacing:.09em;margin:29px 0 10px}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.card{padding:18px;text-decoration:none;color:var(--text);transition:.2s}.card:hover{border-color:var(--cyan);transform:translateY(-2px)}.card b{font-size:14px}.card p{font-size:12px;color:var(--muted);line-height:1.55;min-height:38px}.card small{color:#67e8f9;font-size:11px}@media(max-width:900px){.shell{grid-template-columns:1fr}.sidebar{position:static;width:auto;display:flex;flex-direction:row;overflow-x:auto;padding:8px}.sidebar .brand{padding:3px 8px;white-space:nowrap}.brand small,.section-label,.sidebar-bottom{display:none}.nav{display:flex;gap:3px}.nav a{white-space:nowrap;padding:7px 8px;margin:0}.nav a .ico{display:none}.main{grid-column:1}.content{padding:26px 16px}.top{padding:0 16px}.hero{align-items:flex-start;flex-direction:column}.stats,.cards{grid-template-columns:1fr}}</style></head><body><div class="shell">${renderSyncSidebar(active)}<main class="main"><header class="top"><b>Canonical Hub</b>&nbsp; / &nbsp;${page.title}</header><div class="content"><div class="eyebrow">${page.eyebrow}</div><div class="hero"><div><h1>${page.title}</h1><p>${page.description}</p></div><a class="button" href="${page.primaryHref}"${page.primaryHref.startsWith('http') ? ' target="_blank" rel="noopener"' : ''}>${page.primary} →</a></div><section class="stats">${stats}</section><div class="section-title">Workspace actions</div><section class="cards">${cards}</section></div></main></div></body></html>`;
+}
+
+function renderEmbeddedPage(html: string, active: SyncNavId): string {
+  // Preserve each application's internal markup while adding the one
+  // canonical, isolated navigation shell shared with every Hub page.
+  const nav = JSON.stringify(HUB_NAV_ITEMS);
+  const shell = `<script>(function(){if(document.getElementById('roc-site-shell'))return;var items=${nav},active=${JSON.stringify(active)},groups=['Workspace','Applications','Infrastructure','Manage'];var h=function(v){return String(v).replace(/[&<>"']/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]})};var links=groups.map(function(g){var a=items.filter(function(i){return i.group===g});return a.length?'<div class="lab">'+g+'</div>'+a.map(function(i){return '<a class="it '+(i.id===active?'on':'')+'" href="'+h(i.href)+'"'+(i.external?' target="_blank" rel="noopener"':'')+'><span>'+h(i.icon)+'</span>'+h(i.label)+(i.external?'<em>↗</em>':'')+'</a>'}).join(''):''}).join('');var n=document.createElement('aside');n.id='roc-site-shell';n.innerHTML='<a class="brand" href="https://hub.roadfx.biz.id/"><b>R</b><span>RocSpace<small>Canonical Hub</small></span></a><nav>'+links+'</nav>';var st=document.createElement('style');st.textContent='@media(min-width:901px){html{background:#09090b!important}body{margin-left:232px!important;width:calc(100% - 232px)!important}}#roc-site-shell{position:fixed;z-index:2147483647;inset:0 auto 0 0;width:232px;padding:17px 11px;background:#0b0b0ff2;border-right:1px solid #292931;box-sizing:border-box;font:12px Inter,system-ui,sans-serif;color:#f4f4f5;overflow-y:auto}#roc-site-shell *{box-sizing:border-box}#roc-site-shell .brand{display:flex;align-items:center;gap:10px;padding:5px 8px 19px;color:#f4f4f5;text-decoration:none;font-weight:800;font-size:15px}#roc-site-shell .brand b{display:grid;place-items:center;width:28px;height:28px;border-radius:9px;background:linear-gradient(135deg,#22d3ee,#8b5cf6);color:#09090b}#roc-site-shell .brand small{display:block;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#898994;margin-top:2px}#roc-site-shell .lab{color:#70707b;font-size:9px;font-weight:800;letter-spacing:.11em;text-transform:uppercase;padding:11px 9px 4px}#roc-site-shell .it{display:flex;align-items:center;gap:9px;padding:8px 9px;margin:2px 0;border-radius:8px;text-decoration:none;color:#aaaab4}#roc-site-shell .it:hover,#roc-site-shell .it.on{background:#202027;color:#ecfeff}#roc-site-shell .it.on{box-shadow:inset 2px 0 #22d3ee}#roc-site-shell .it em{font-style:normal;margin-left:auto;color:#67e8f9}@media(max-width:900px){#roc-site-shell{position:sticky;top:0;width:100%;height:auto;min-height:52px;padding:7px 9px;display:flex;align-items:center;gap:8px;overflow-x:auto;border-right:0;border-bottom:1px solid #292931}#roc-site-shell .brand{padding:3px 4px;white-space:nowrap}#roc-site-shell .brand small,#roc-site-shell .lab{display:none}#roc-site-shell nav{display:flex;gap:3px}#roc-site-shell .it{white-space:nowrap;padding:7px 8px;margin:0}#roc-site-shell .it span{display:none}}';document.head.appendChild(st);document.body.insertBefore(n,document.body.firstChild)})();</script>`;
+  return html.includes('</body>') ? html.replace('</body>', shell + '</body>') : html + shell;
+}
+
+async function localApiResponse(request: Request, url: URL, env: any): Promise<Response> {
+  if (url.pathname === '/v1/models') return jsonResponse({ object: 'list', data: AI_MODELS.map(m => ({ id: m.id, object: 'model', owned_by: m.provider })) });
+  if (url.pathname === '/providers/status') return proxyTo(request, GATEWAY, '/dashboard/status', url, env.GATEWAY_TOKEN || '');
+  if (url.pathname === '/' || url.pathname === '/api') return jsonResponse({ name: 'RocSpace API', version: 'sitehub + hermes gateway', canonical: `https://${CANONICAL.API}`, models: '/v1/models', status: '/health', providers: '/providers/status', chat: '/v1/chat/completions' });
+  const gatewayPaths = ['/v1/', '/ai/', '/auth/', '/crawl', '/webhook/', '/notify', '/solace/'];
+  if (gatewayPaths.some(prefix => url.pathname.startsWith(prefix))) {
+    return proxyTo(request, GATEWAY, url.pathname, url, env.GATEWAY_TOKEN || '');
+  }
+  return jsonResponse({ error: { message: 'Endpoint not found.', path: url.pathname } }, 404);
+}
+
+// ─── Shared navigation: one definition for every Hub-local page ─────────
+type SyncNavItem = typeof HUB_NAV_ITEMS[number];
+type SyncNavId = SyncNavItem['id'];
+const SYNC_NAV_ITEMS = HUB_NAV_ITEMS;
+
+function syncNavLinks(active: SyncNavId, renderItem: (item: SyncNavItem, active: boolean) => string, renderGroup: (group: string) => string): string {
+  return (['Workspace', 'Applications', 'Infrastructure', 'Manage'] as const).map(group => {
+    const items = SYNC_NAV_ITEMS.filter(item => item.group === group);
+    return `${renderGroup(group)}${items.map(item => renderItem(item, item.id === active)).join('')}`;
+  }).join('');
+}
+
+function renderSyncSidebar(active: SyncNavId): string {
+  const item = (entry: SyncNavItem, selected: boolean) => `<a class="${selected ? 'active' : ''}" href="${entry.href}"${entry.external ? ' target="_blank" rel="noopener"' : ''}><span class="ico">${entry.icon}</span>${entry.label}${entry.external ? '<span class="pill">↗</span>' : ''}</a>`;
+  return `<aside class="sidebar" id="sidebar"><a class="brand" href="/"><span class="mark">R</span><span><b>RocSpace</b><small>Command Center</small></span></a><div class="nav">${syncNavLinks(active, item, group => `<div class="section-label">${group}</div>`)}</div><div class="sidebar-bottom identity"><b>RoadFX AI</b><small>Infrastructure owner</small></div></aside>`;
+}
+
+function localSidebarStyles(): string {
+  return `.roc-nav{position:fixed;inset:0 auto 0 0;z-index:20;width:218px;padding:18px 12px;background:#0c0c0f;border-right:1px solid #27272a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}.roc-brand{display:block;padding:7px 10px 21px;color:#f4f4f5;text-decoration:none;font-weight:800;font-size:16px}.roc-brand small{display:block;color:#71717a;font-size:10px;letter-spacing:.1em;text-transform:uppercase;margin-top:2px}.roc-nav .rn-label{color:#71717a;font-weight:700;font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:12px 10px 5px}.roc-nav a.rn{display:flex;align-items:center;gap:9px;padding:9px 10px;margin:2px 0;border-radius:8px;color:#a1a1aa;text-decoration:none;font-size:12px;transition:.16s}.roc-nav a.rn:hover,.roc-nav a.rn.active{background:#1d1d23;color:#ecfeff}.roc-nav a.rn.active{box-shadow:inset 2px 0 #22d3ee}.roc-nav .rn-ext{margin-left:auto;color:#67e8f9;font-size:10px}@media(min-width:781px){body.roc-local{padding-left:218px!important}}@media(max-width:780px){.roc-nav{position:static;width:auto;display:flex;align-items:center;gap:3px;padding:8px;overflow-x:auto;border-right:0;border-bottom:1px solid #27272a}.roc-brand{padding:5px 8px;white-space:nowrap}.roc-brand small,.roc-nav .rn-label{display:none}.roc-nav a.rn{white-space:nowrap;padding:7px 8px;font-size:11px}.roc-nav a.rn span:first-child{display:none}}`;
+}
+
+function localSidebar(active: SyncNavId): string {
+  const item = (entry: SyncNavItem, selected: boolean) => `<a class="rn ${selected ? 'active' : ''}" href="${entry.href}"${entry.external ? ' target="_blank" rel="noopener"' : ''}><span>${entry.icon}</span>${entry.label}${entry.external ? '<span class="rn-ext">↗</span>' : ''}</a>`;
+  return `<aside class="roc-nav" aria-label="RocSpace navigation"><a class="roc-brand" href="/"><span>◈ RocSpace</span><small>Command Center</small></a>${syncNavLinks(active, item, group => `<div class="rn-label">${group}</div>`)}</aside>`;
+}
+
+function renderVmSyncMenu(): string {
+  const item = (entry: SyncNavItem, selected: boolean) => `<div class="si${selected ? ' active' : ''}" onclick="${entry.external ? `window.open('${entry.href}','_blank','noopener')` : `location.href='${entry.href}'`}">${entry.icon} ${entry.label}${entry.external ? ' ↗' : ''}</div>`;
+  return syncNavLinks('vm', item, group => `<div style="color:#94a3b8;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:12px 20px 5px">${group}</div>`);
 }
 
 // ─── v19.1: Directory lokal — pengganti /links gateway yang 522 ──
@@ -505,15 +554,15 @@ function renderLinks(): string {
   const row = (n: string, d: string, href: string) => `<a class="svc-row" href="${href}" style="text-decoration:none;color:inherit"><div><div class="svc-name">${n}</div><div class="svc-detail">${d}</div></div><span class="svc-status on">↗</span></a>`;
   return `<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="canonical" href="https://hub.roadfx.biz.id/links"><title>ROC Directory — Semua Koneksi</title>
-<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#09090b;color:#e4e4e7;min-height:100vh}
+<style>${localSidebarStyles()}*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#09090b;color:#e4e4e7;min-height:100vh}
 .hero{text-align:center;padding:56px 20px 36px;background:radial-gradient(circle_at_top,rgba(34,211,238,0.14),transparent 42%),#09090b}.hero h1{font-size:2.2em;font-weight:900;background:linear-gradient(135deg,#22d3ee,#e879f9);-webkit-background-clip:text;-webkit-text-fill-color:transparent}.hero p{color:#a1a1aa;margin-top:10px}
 .sec-t{max-width:900px;margin:36px auto 10px;padding:0 20px;font-size:0.75em;letter-spacing:0.3em;text-transform:uppercase;color:#22d3ee}
 .services{max-width:900px;margin:0 auto;padding:0 20px}.svc-row{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;background:#101014;border:1px solid #27272a;border-radius:12px;margin-bottom:8px;transition:0.2s}.svc-row:hover{border-color:#22d3ee}.svc-name{font-weight:600;font-size:0.92em}.svc-detail{color:#71717a;font-size:0.76em;margin-top:2px}.svc-status{padding:4px 12px;border-radius:20px;font-size:0.72em;font-weight:700;background:rgba(34,211,238,0.1);color:#67e8f9}
 a{text-decoration:none}footer{text-align:center;padding:36px;color:#52525b;font-size:0.78em}
-</style></head><body>
+</style></head><body class="roc-local">${localSidebar('directory')}
 <div class="hero"><h1>🗂️ ROC Directory</h1><p>Semua koneksi & integrasi · lokal di worker · v19.1.1 (pengganti /links gateway yang 522)</p></div>
 ${sec('// Layanan inti (hub)', row('🖥️ VM Console','WebVirtCloud + Firebase + noVNC','/vm') + row('📊 Monitor','Uptime Kuma via Nginx VM','/monitor') + row('🧠 AI Gateway','16 models · 5 providers','/ai') + row('🔴 Chat Live','Clerk auth penuh','/chat-live') + row('💬 Quick Chat','tanpa login','/chat') + row('📈 Status','status page lokal','/status') + row('🎛️ Dashboard','panel infrastruktur gateway','/dashboard') + row('🎨 AI Studio','applet privat (login Google)',AI_STUDIO.APP))}
-${sec('// API & endpoint (mesin)', row('⚡ api.roadfx.biz.id','API kanonik — /v1/models dll','https://api.roadfx.biz.id/v1/models') + row('🏥 /health','bridge JSON ke VM','/health') + row('📡 gateway — hermes-cloudflare','workers.dev internal · anti-loop','https://hermes-cloudflare.certveis.workers.dev'))}
+${sec('// API & endpoint (mesin)', row('⚡ api.roadfx.biz.id','API kanonik — /v1/models dll','https://api.roadfx.biz.id/v1/models') + row('🏥 /health','bridge JSON ke VM','/health') + row('📡 gateway — hermes-cloudflare','workers.dev internal · anti-loop','https://api.roadfx.biz.id'))}
 ${sec('// Kolaborasi & label', row('🌐 Tailscale tailnet','roc-vm · rocfx · CPH1823','https://login.tailscale.com/admin/machines') + row('🔥 Firebase planning-with-ai-36675','Firestore + Hosting','https://console.firebase.google.com') + row('☁️ GCP trial $300','budget alert 50/90/100%','https://console.cloud.google.com/billing') + row('🛠️ OCI Console','Run Command → SSH VM','https://cloud.oracle.com'))}
 ${sec('// Repositori sumber (SATU SOURCE)', row('ivansslo/rocspace','SATU SOURCE AKTIF — hub + gateway + archive/','https://github.com/ivansslo/rocspace') + row('↳ archive/','arsip 4 repo terhapus (Solace-Hermes · ai-vitality · roadfx-ai-stack · roadfx-full-stack)','https://github.com/ivansslo/rocspace/tree/main/archive') + row('ivansslo/roc-containers','Termux v1.6.0','https://github.com/ivansslo/roc-containers') + row('ivansslo/roc-agentsroute','hermes v5.13.1','https://github.com/ivansslo/roc-agentsroute') + row('ivansslo/Rofwin','APK v1.1.0','https://github.com/ivansslo/Rofwin'))}
 ${sec('// Eksternal', row('🧠 Termux di HP (roc-menu)','Antigravity udocker localhost:5905','/vm') + row('🏷️ Labels','rocspace.ai.studio · webvirtcloud.ai.studio · antigravity.ai.studio','/'))}
@@ -523,12 +572,12 @@ ${sec('// Eksternal', row('🧠 Termux di HP (roc-menu)','Antigravity udocker lo
 
 function renderQuickChat(): string {
   return `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RocSpace Quick Chat</title>
-<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:sans-serif;background:#0a0a0f;color:#e2e8f0;height:100vh;display:flex;flex-direction:column}
+<style>${localSidebarStyles()}*{margin:0;padding:0;box-sizing:border-box}body{font-family:sans-serif;background:#0a0a0f;color:#e2e8f0;height:100vh;display:flex;flex-direction:column}
 nav{padding:12px 20px;background:#0f0f17;border-bottom:1px solid #1e1e2e;display:flex;align-items:center;gap:16px}nav a{color:#94a3b8;text-decoration:none;font-size:0.9em}nav a:hover{color:#60a5fa}nav .brand{font-weight:700;color:#60a5fa;font-size:1.1em}
 #chat{flex:1;overflow-y:auto;padding:20px;max-width:800px;margin:0 auto;width:100%}.msg{margin-bottom:16px;padding:14px 18px;border-radius:14px;max-width:85%;line-height:1.6;font-size:0.95em;white-space:pre-wrap;word-wrap:break-word}.msg.user{background:#1e3a5f;margin-left:auto;border-bottom-right-radius:4px}.msg.bot{background:#1a1a2e;border-bottom-left-radius:4px}
 #input-area{padding:16px;background:#0f0f17;border-top:1px solid #1e1e2e;display:flex;gap:8px;max-width:800px;margin:0 auto;width:100%}#msg-input{flex:1;padding:12px 16px;border-radius:12px;border:1px solid #1e1e2e;background:#12121a;color:#e2e8f0;font-size:0.95em;outline:none}#msg-input:focus{border-color:#60a5fa}#send-btn{padding:12px 24px;border-radius:12px;border:none;background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;font-weight:600;cursor:pointer}#send-btn:hover{opacity:0.9}
 .note{text-align:center;padding:8px;background:#1a1a2e;color:#64748b;font-size:0.8em}a.live{color:#f97316;text-decoration:none}
-</style></head><body>
+</style></head><body class="roc-local">${localSidebar('chat')}
 <nav><span class="brand">💬 Quick Chat</span><a href="/">🏠 Home</a><a href="/chat-live">🔴 Chat Live</a></nav>
 <div id="chat"><div class="msg bot">Halo! Saya RocSpace AI. Ada yang bisa saya bantu? 🤖</div></div>
 <div class="note">🔓 No login required · <a class="live" href="/chat-live">Chat Live → full features</a></div>
@@ -543,26 +592,4 @@ if(d.choices&&d.choices[0]){t.classList.remove('typing');t.textContent=d.choices
 chat.scrollTop=chat.scrollHeight}
 function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
 </script></body></html>`;
-}
-
-// ─── Status ────────────────────────────────────────────
-
-function renderStatus(): string {
-  const date = new Date().toISOString().split('T')[0];
-  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RocSpace Status</title><meta http-equiv="refresh" content="30">
-<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:monospace;background:#0a0a0f;color:#34d399;padding:20px;max-width:900px;margin:0 auto}h1{color:#60a5fa;margin-bottom:20px}nav{margin-bottom:20px}nav a{color:#60a5fa;text-decoration:none;margin-right:16px}.row{padding:10px 0;border-bottom:1px solid #1e1e2e;display:flex;justify-content:space-between}.ok{color:#34d399}.warn{color:#fbbf24}.err{color:#ef4444}footer{margin-top:40px;color:#475569;font-size:0.8em}</style></head><body>
-<nav><a href="/">🏠 Dashboard</a><a href="/chat-live">💬 Chat Live</a><a href="/vm">🖥️ VM Console</a></nav>
-<h1>📊 RocSpace Status</h1>
-<div class="row"><span>roc-site (Unified Router)</span><span class="ok">● Active · 16 domains</span></div>
-<div class="row"><span>hermes-cloudflare (Gateway)</span><span class="ok">● Active · v17.1.1</span></div>
-<div class="row"><span>WebVirtCloud + Firebase</span><span class="ok">● Running · Oracle VM</span></div>
-<div class="row"><span>Uptime Monitor</span><span class="ok">● Running</span></div>
-<div class="row"><span>CloudRun (ai-vitality)</span><span class="err">● DOWN · billing issue</span></div>
-<div class="row"><span>Clerk Auth</span><span class="ok">● 25 origins · 8 social logins</span></div>
-<div class="row"><span>Firebase Auth</span><span class="ok">● yttriferous-magpie-16ppv</span></div>
-<div class="row"><span>Solace Broker</span><span class="ok">● Connected · Singapore</span></div>
-<div class="row"><span>Oracle VM</span><span class="ok">● Running · Singapore</span></div>
-<div class="row"><span>AI Models</span><span class="ok">● 16 models (5 providers)</span></div>
-<footer>RocSpace · ${date} · v17.3.0</footer>
-</body></html>`;
 }

@@ -17,7 +17,7 @@ if (!ACCOUNT_ID) {
 
 // Worker name → CF script name mapping
 const WORKER_MAP = {
-  'site': 'roc-site',
+  'site': 'sitehub',
   'gateway': 'hermes-cloudflare',
   'auth': 'openauth-certve',
   'webhook': 'hermes-webhook',
@@ -45,7 +45,7 @@ try {
     ? '--alias:@rocspace/shared=./packages/shared/src/index.ts'
     : '';
 
-  const loaderArgs = workerArg === 'gateway' ? '--loader:.html=text' : '';
+  const loaderArgs = (workerArg === 'gateway' || workerArg === 'site') ? '--loader:.html=text' : '';
   execSync(
     `npx esbuild ${join(workerDir, 'src/index.ts')} --bundle --format=esm --target=es2022 ` +
     `--outfile=${distFile} ${aliasMap} ${loaderArgs} --external:cloudflare:sockets`,
@@ -66,10 +66,37 @@ console.log(`📦 Deploying ${workerArg} → ${cfName} (${(script.length / 1024)
 
 // ESM multipart upload
 const boundary = '----FormBoundary' + Math.random().toString(36).slice(2);
+// Preserve all existing binding *types* when publishing a new script version.
+// In particular this keeps secret_text bindings in Cloudflare; secret values are
+// never read, written, logged, or stored by this deploy script.
+let keepBindings = [];
+try {
+  const settingsResponse = await fetch(
+    `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/workers/scripts/${cfName}/settings`,
+    { headers: { 'Authorization': `Bearer ${CFAT}` } },
+  );
+  const settings = await settingsResponse.json();
+  if (settingsResponse.status === 404) {
+    // A new Worker is safe to create with no inherited bindings. Secrets are
+    // added explicitly after its first successful deployment.
+    console.log('🔒 Creating new Worker with no inherited bindings');
+  } else {
+    if (!settingsResponse.ok || !settings.success) throw new Error('unable to read existing Worker settings');
+    keepBindings = [...new Set((settings.result?.bindings || []).map(binding => binding.type).filter(Boolean))];
+    console.log(`🔒 Preserving binding types: ${keepBindings.length ? keepBindings.join(', ') : 'none'}`);
+  }
+} catch (error) {
+  // Deploying with an incomplete metadata object can delete bindings. Fail
+  // closed instead of risking the production Worker when settings are unknown.
+  console.error(`❌ Safe deploy stopped: ${error.message}`);
+  process.exit(1);
+}
+
 const metadata = JSON.stringify({
   main_module: 'index.js',
   compatibility_date: '2024-12-01',
   bindings: [],
+  keep_bindings: keepBindings,
 });
 
 const body =
