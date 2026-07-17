@@ -1,5 +1,16 @@
 # RocSpace Infrastructure Status
-> **Last Updated:** 2026-07-17 · **Version:** v19.0.0 (site) / v18.0.3 (gateway)
+> **Last Updated:** 2026-07-17 · **Version:** v19.1.0 (site) / v18.0.3 (gateway)
+
+## 🎛️ Command Center (v19.1.0 — 2026-07-17)
+
+- Landing hub dari template full-stack-dashboard (zinc-950 · neon cyan/fuchsia ·
+  Agent Orchestra 8 mode) + **live sync probe** di sisi klien.
+- **Audit page**: `/links` 522 berulang → directory **lokal** (`hub /links` 200);
+  `/ais` → 302 applet resmi; `/auth` & `/r2` 404 murni (dihapus dari nav, prefix
+  fungsional tetap); host `ais.`/`newcr.` DNS tidak ada.
+- **Sumber page lama** (anti-mirror → tautan, bukan re-host): gateway ↔
+  `Solace-Hermes-Project` · Cloud Run ↔ `roadfx-ai-stack` / `ai-vitality` (DOWN
+  billing OR_BACR2_44).
 
 ## 🛰️ Hub Tunggal (v19.0.0 — 2026-07-17)
 

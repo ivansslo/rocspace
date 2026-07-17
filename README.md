@@ -260,6 +260,19 @@ CF_API_TOKEN=your_token node scripts/deploy-worker.mjs gateway --esm
 
 ## 🔄 Changelog
 
+### v19.1.0 — Command Center (hub.roadfx.biz.id)
+- Landing hub dibangun ulang dari template **full-stack-dashboard**: dark command-center
+  zinc-950, aksen neon cyan/fuchsia, **Agent Orchestra 8 mode** (task→ask)
+- **Sinkron live**: chip status diisi JS `fetch` (`/health`, `api./v1/models`, `/chat-live`, `/status`)
+- **Audit page** 2026-07-17: `/links` mati (522 berulang via proxy) → diganti **directory lokal**
+  `renderLinks()` (tidak tergantung gateway); `/ais` (applet AIS_DEV 404) → 302 ke applet resmi
+  `rocspace.ai.studio`; `/auth` & `/r2` (404 murni, belum pernah diimplementasikan) dihapus dari
+  nav tapi prefix fungsional tetap; host `ais.`/`newcr.` DNS-nya sudah tidak ada
+- **Integrasi & kolaborasi** di satu halaman: repo sumber (rocspace · Solace-Hermes-Project ·
+  roadfx-ai-stack · ai-vitality🔴 · roc-containers · roc-agentsroute · Rofwin) + label ai.studio
+  + tailnet + Firebase/GCP — sebagai tautan (anti-mirror, tidak di-host ulang)
+- Version strings site → v19.1.0
+
 ### v19.0.0 — Hub Tunggal (hub.roadfx.biz.id)
 - Satu situs kanonik untuk semua halaman — **tidak ada lagi mirror page**:
   halaman di 16 host lama → **301** ke padanannya di hub (path dipertahankan)

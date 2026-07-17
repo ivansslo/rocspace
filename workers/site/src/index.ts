@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════
-//  roc-site — Unified Router v19.0.0 "Hub Tunggal"
+//  roc-site — Unified Router v19.1.0 "Command Center"
 //  Kanonik: hub.roadfx.biz.id (anti-mirror) · API: api.roadfx.biz.id
 //  17 hosts → roc-site, WebVirtCloud + Firebase (yttriferous-magpie-16ppv)
 // ═══════════════════════════════════════════════════════════
@@ -196,6 +196,9 @@ async function serve(request: Request, env: any): Promise<Response> {
       return proxyTo(request, GATEWAY, '/dashboard', url, gwToken);
     }
 
+    // v19.1: applet AIS kandidat (AIS_DEV) mati 404 → di hub arahkan ke applet resmi privat
+    if ((path === '/ais' || path === '/ais-dev') && host === CANONICAL.HUB) return Response.redirect(AI_STUDIO.APP, 302);
+
     // ─── New AIS_DEV fallback (Google AI Studio Applet / new CloudRun) ──
     // Usage: /ais , /ais/..., /ais-dev , /ais-dev/...
     if (path === '/ais' || path.startsWith('/ais/') || path === '/ais-dev' || path.startsWith('/ais-dev/')) {
@@ -212,7 +215,7 @@ async function serve(request: Request, env: any): Promise<Response> {
     if (path === '/crew' || path.startsWith('/crew/') || path === '/crawl4ai' || path.startsWith('/crawl4ai/') ||
         path === '/zapier' || path.startsWith('/zapier/') || path === '/logs' || path.startsWith('/logs/') ||
         path === '/dashboard' || path.startsWith('/dashboard/')) return proxyTo(request, GATEWAY, path, url);
-    if (path === '/links') return proxyTo(request, GATEWAY, '/links', url);
+    if (path === '/links') return host === CANONICAL.HUB ? htmlResponse(renderLinks()) : proxyTo(request, GATEWAY, '/links', url);
     if (path === '/solace/' || path === '/solace/status' || path === '/solace/queues') return proxyTo(request, GATEWAY, path, url);
     if (path.startsWith('/crawl') || path.startsWith('/notify')) return proxyTo(request, GATEWAY, path, url);
 
@@ -314,7 +317,7 @@ iframe{width:100%;height:100%;border:none}
     <iframe id="wvc-frame" src="" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"></iframe>
     <div class="status-bar">
       <span id="conn-status">WebVirtCloud: Waiting for auth...</span>
-      <span>RocSpace v19.0.0 · Firebase yttriferous-magpie-16ppv</span>
+      <span>RocSpace v19.1.0 · Firebase yttriferous-magpie-16ppv</span>
     </div>
   </div>
 </div>
@@ -375,7 +378,7 @@ nav{text-align:center;padding:16px;background:#0f0f17;border-bottom:1px solid #1
 .services{max-width:1200px;margin:40px auto;padding:0 20px}.domain-grid{max-width:1200px;margin:40px auto;padding:0 20px}.domain-card{display:inline-block;padding:10px 18px;background:#12121a;border:1px solid #1e1e2e;border-radius:10px;margin:4px;color:#60a5fa;text-decoration:none;font-size:0.85em;font-family:monospace;transition:0.2s}.domain-card:hover{border-color:#60a5fa;background:#1a1a2e}footer{text-align:center;padding:40px;color:#475569;font-size:0.8em}
 </style></head><body>
 <nav><a href="/">🏠 Dashboard</a><a href="/chat-live">💬 Chat Live</a><a href="/chat">🤖 Quick Chat</a><a href="/status">📊 Status</a><a href="/vm">🖥️ VM Console</a></nav>
-<div class="hero"><h1>RocSpace</h1><p>AI Infrastructure · Unified Router · v19.0.0</p>
+<div class="hero"><h1>RocSpace</h1><p>AI Infrastructure · Unified Router · v19.1.0</p>
 <span class="tag">🤖 16 AI Models</span><span class="tag">📡 Solace PubSub+</span><span class="tag">☁️ CF Workers</span><span class="tag">🧠 Cloud Run</span><span class="tag">🖥️ Oracle VM</span><span class="tag">🔥 Firebase</span><span class="tag">🛡️ WebVirtCloud</span><span class="tag">🎨 AI Studio (rocspace.ai.studio)</span></div>
 <div class="grid">
 <a href="/vm" class="card"><h2>🖥️ VM Console</h2><div class="stat">KVM</div><div class="label">WebVirtCloud + Firebase</div><p>VM management · Firebase Auth · noVNC</p></a>
@@ -388,24 +391,26 @@ nav{text-align:center;padding:16px;background:#0f0f17;border-bottom:1px solid #1
 </div>
 <div class="services"><h2 style="margin-bottom:16px;font-size:1.3em">🔄 Infrastructure</h2>
 <div class="svc-row"><div><div class="svc-name">WebVirtCloud + Firebase</div><div class="svc-detail">Oracle VM · yttriferous-magpie-16ppv · KVM</div></div><span class="svc-status on">● Running</span></div>
-<div class="svc-row"><div><div class="svc-name">Gateway (hermes-cloudflare)</div><div class="svc-detail">v19.0.0 · 16 models · 5 providers</div></div><span class="svc-status on">● Active</span></div>
+<div class="svc-row"><div><div class="svc-name">Gateway (hermes-cloudflare)</div><div class="svc-detail">v19.1.0 · 16 models · 5 providers</div></div><span class="svc-status on">● Active</span></div>
 <div class="svc-row"><div><div class="svc-name">CloudRun (ai-vitality)</div><div class="svc-detail">us-west1 · billing issue</div></div><span class="svc-status off">● Down</span></div>
 <div class="svc-row"><div><div class="svc-name">AIS-DEV (new candidate)</div><div class="svc-detail">asia-east1 · AI Studio Applet (fallback)</div></div><span class="svc-status warn">● Available</span></div>
 <div class="svc-row"><div><div class="svc-name">AI Studio Applet</div><div class="svc-detail">alias: rocspace.ai.studio 🔒 · privat · aistudio.google.com</div></div><span class="svc-status on">● Integrated</span></div>
-<div class="svc-row"><div><div class="svc-name">CF Workers (roc-site)</div><div class="svc-detail">v19.0.0 · 16 domains</div></div><span class="svc-status on">● Active</span></div>
+<div class="svc-row"><div><div class="svc-name">CF Workers (roc-site)</div><div class="svc-detail">v19.1.0 · 16 domains</div></div><span class="svc-status on">● Active</span></div>
 <div class="svc-row"><div><div class="svc-name">Oracle Cloud VM</div><div class="svc-detail">Singapore · 1CPU/16GB · Docker</div></div><span class="svc-status on">● Running</span></div>
 <div class="svc-row"><div><div class="svc-name">Clerk Auth</div><div class="svc-detail">25 origins · 8 social logins</div></div><span class="svc-status on">● Active</span></div>
 <div class="svc-row"><div><div class="svc-name">Firebase Auth</div><div class="svc-detail">yttriferous-magpie-16ppv · Google Sign-in</div></div><span class="svc-status on">● Active</span></div>
 <div class="svc-row"><div><div class="svc-name">Solace PubSub+</div><div class="svc-detail">Singapore · 5 queues</div></div><span class="svc-status on">● Connected</span></div>
 </div>
 <div class="domain-grid"><h2 style="margin-bottom:16px;font-size:1.3em">🌐 Domains (All → roc-site)</h2>${domains}</div>
-<footer>RocSpace by RoadFX AI · 2026 · v19.0.0 · <a href="https://github.com/ivansslo/rocspace" style="color:#60a5fa">GitHub</a></footer>
+<footer>RocSpace by RoadFX AI · 2026 · v19.1.0 · <a href="https://github.com/ivansslo/rocspace" style="color:#60a5fa">GitHub</a></footer>
 </body></html>`;
 }
 
 // ─── Quick Chat ────────────────────────────────────────
 
-// ─── v19: Hub Tunggal — landing kanonik hub.roadfx.biz.id ─────────
+// ─── v19.1: Command Center — landing kanonik hub.roadfx.biz.id ────
+// Gaya mengikuti template "full-stack-dashboard" (zinc-950, neon cyan/fuchsia,
+// agent orchestra 8 mode) · sinkron live via fetch · tanpa mirror.
 function renderHub(): string {
   const cards = [
     { href: '/vm',        icon: '🖥️', title: 'VM Console', stat: 'KVM', label: 'webvirtcloud.ai.studio',    desc: 'WebVirtCloud · Firebase Auth · noVNC' },
@@ -415,33 +420,106 @@ function renderHub(): string {
     { href: '/chat',      icon: '💬', title: 'Quick Chat', stat: '⚡',  label: 'No login',                  desc: 'Langsung pakai, tanpa akun' },
     { href: '/status',    icon: '📈', title: 'Status',     stat: '●',   label: 'Live',                      desc: 'Kesehatan seluruh layanan' },
     { href: '/dashboard', icon: '🎛️', title: 'Dashboard',  stat: '∞',   label: 'Gateway UI',                desc: 'Panel infrastruktur hermes' },
-    { href: '/ais',       icon: '🎨', title: 'AI Studio',  stat: '🚀',  label: 'rocspace.ai.studio 🔒',     desc: 'Applet privat Google AI Studio' },
-    { href: '/links',     icon: '🔗', title: 'Links',      stat: '☰',   label: 'Direktori',                 desc: 'Semua tautan ROC' },
-    { href: '/cloudrun',  icon: '☁️', title: 'Cloud Run',  stat: '—',   label: 'AIS-DEV asia-east1',        desc: 'Proxy applet kandidat baru' },
+    { href: '/links',     icon: '🗂️', title: 'Directory',  stat: '☰',   label: 'Lokal v19.1',               desc: 'Semua koneksi & integrasi ROC (tidak lagi via gateway 522)' },
+    { href: '/cloudrun',  icon: '☁️', title: 'Cloud Run',  stat: '—',   label: 'via gateway',               desc: 'ai-vitality DOWN (billing) → fallback' },
   ].map(c => `<a href="${c.href}" class="card"><h2>${c.icon} ${c.title}</h2><div class="stat">${c.stat}</div><div class="label">${c.label}</div><p>${c.desc}</p></a>`).join('\n');
+
+  const modes = [
+    ['🎯','task','Task Planner'],['💻','code','Code Builder'],['🧠','think','Deep Thinker'],
+    ['🛡️','ground','Grounding Analyst'],['🔨','hack','Security Reviewer'],['🔎','research','Research Scout'],
+    ['🪄','sculp','UX Sculptor'],['🔬','ask','Clarifying Agent'],
+  ].map(m => `<a href="/chat-live" class="mode" title="${m[2]}"><span>${m[0]}</span>${m[1]}</a>`).join('');
+
+  const probes = [
+    ['VM Bridge (Oracle roc-vm)', '/health', 'hub · raw TCP socket → Nginx'],
+    ['API kanonik (16 models)', 'https://api.roadfx.biz.id/v1/models', 'api.roadfx.biz.id'],
+    ['Chat Live (Clerk)', '/chat-live', 'via hermes-cloudflare'],
+    ['Status page', '/status', 'render lokal worker'],
+  ].map(p => `<div class="svc-row"><div><div class="svc-name">${p[0]}</div><div class="svc-detail">${p[2]}</div></div><span class="svc-status warn" data-probe="${p[1]}">● cek…</span></div>`).join('\n');
+
+  const repos = [
+    ['rocspace', 'repo ini — hub + shared v19.1.0', '🛰️'],
+    ['Solace-Hermes-Project', 'kandidat sumber gateway hermes-cloudflare', '📡'],
+    ['roadfx-ai-stack', 'stack AI Cloud Run (arsip)', '☁️'],
+    ['ai-vitality', 'Cloud Run ai-vitality — 🔴 DOWN billing OR_BACR2_44', '🧯'],
+    ['roc-containers', 'Termux menu/wrapper v1.6.0', '📱'],
+    ['roc-agentsroute', 'hermes CLI v5.13.1 "Oracle"', '🧭'],
+    ['Rofwin', 'APK v1.0.1 (9 aset release)', '🎮'],
+  ].map(r => `<a href="https://github.com/ivansslo/${r[0]}" class="repo"><span class="ric">${r[2]}</span><span><b>${r[0]}</b><br><small>${r[1]}</small></span></a>`).join('\n');
+
   const oldHosts = FULL_DOMAIN_MAP.filter(d => d.hostname !== CANONICAL.HUB)
     .map(d => `<a href="https://${d.hostname}" class="domain-card" title="301 → hub">${d.description.split(' ')[0]} ${d.hostname}</a>`).join('\n');
+
   return `<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<link rel="canonical" href="https://hub.roadfx.biz.id/"><title>RocSpace Hub — Satu Situs</title>
-<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0a0f;color:#e2e8f0;min-height:100vh}
-.hero{text-align:center;padding:60px 20px 40px;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e)}.hero h1{font-size:2.5em;font-weight:800;background:linear-gradient(135deg,#60a5fa,#a78bfa,#f472b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}.hero p{color:#94a3b8;margin:12px 0 24px;font-size:1.1em}.hero .tag{display:inline-block;padding:6px 14px;border-radius:20px;font-size:0.8em;margin:4px;background:rgba(96,165,250,0.15);color:#60a5fa;border:1px solid rgba(96,165,250,0.3)}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;max-width:1200px;margin:40px auto;padding:0 20px}.card{background:#12121a;border:1px solid #1e1e2e;border-radius:16px;padding:24px;transition:all 0.3s;cursor:pointer;text-decoration:none;color:inherit;display:block}.card:hover{border-color:#60a5fa;box-shadow:0 0 30px rgba(96,165,250,0.1);transform:translateY(-2px)}.card h2{font-size:1.3em;margin-bottom:8px}.card p{color:#94a3b8;font-size:0.9em;line-height:1.6}.card .stat{font-size:2em;font-weight:700;background:linear-gradient(135deg,#34d399,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}.card .label{color:#64748b;font-size:0.8em}
-nav{text-align:center;padding:16px;background:#0f0f17;border-bottom:1px solid #1e1e2e}nav a{color:#94a3b8;text-decoration:none;margin:0 12px;font-size:0.9em;padding:8px 16px;border-radius:8px;transition:0.2s}nav a:hover{color:#60a5fa;background:rgba(96,165,250,0.1)}
-.svc-row{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:#12121a;border:1px solid #1e1e2e;border-radius:12px;margin-bottom:8px}.svc-name{font-weight:600;font-size:0.95em}.svc-detail{color:#64748b;font-size:0.8em;margin-top:2px}.svc-status{padding:4px 12px;border-radius:20px;font-size:0.75em;font-weight:600;white-space:nowrap}.on{background:rgba(52,211,153,0.15);color:#34d399}.warn{background:rgba(251,191,36,0.15);color:#fbbf24}.off{background:rgba(239,68,68,0.15);color:#ef4444}
-.services{max-width:1200px;margin:40px auto;padding:0 20px}.domain-grid{max-width:1200px;margin:40px auto;padding:0 20px}.domain-card{display:inline-block;padding:10px 18px;background:#12121a;border:1px solid #1e1e2e;border-radius:10px;margin:4px;color:#8b93a7;text-decoration:none;font-size:0.85em;font-family:monospace;transition:0.2s}.domain-card:hover{border-color:#60a5fa;color:#60a5fa}footer{text-align:center;padding:40px;color:#475569;font-size:0.8em}
+<link rel="canonical" href="https://hub.roadfx.biz.id/"><title>RocSpace Hub — Command Center</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#09090b;color:#e4e4e7;min-height:100vh}
+.hero{text-align:center;padding:64px 20px 44px;background:radial-gradient(circle_at_top,rgba(34,211,238,0.14),transparent 42%),linear-gradient(135deg,#09090b,#18181b)}.hero .kick{display:inline-block;font-size:0.72em;letter-spacing:0.35em;text-transform:uppercase;color:#22d3ee;border:1px solid rgba(34,211,238,0.3);border-radius:20px;padding:6px 16px;margin-bottom:16px}
+.hero h1{font-size:2.6em;font-weight:900;letter-spacing:-0.02em;background:linear-gradient(135deg,#22d3ee,#e879f9);-webkit-background-clip:text;-webkit-text-fill-color:transparent}.hero p{color:#a1a1aa;margin:12px 0 22px;font-size:1.05em}.tag{display:inline-block;padding:5px 14px;border-radius:20px;font-size:0.78em;margin:4px;background:rgba(34,211,238,0.1);color:#67e8f9;border:1px solid rgba(34,211,238,0.25)}
+.tag.hot{background:rgba(232,121,249,0.1);color:#f0abfc;border-color:rgba(232,121,249,0.25)}
+nav{position:sticky;top:0;z-index:10;text-align:center;padding:14px;background:rgba(9,9,11,0.85);backdrop-filter:blur(8px);border-bottom:1px solid #27272a}nav a{color:#a1a1aa;text-decoration:none;margin:0 10px;font-size:0.88em;padding:7px 14px;border-radius:9px;transition:0.2s}nav a:hover{color:#22d3ee;background:rgba(34,211,238,0.08)}
+.modes{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:1000px;margin:26px auto 0;padding:0 20px}.mode{display:flex;align-items:center;gap:7px;padding:8px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);color:#d4d4d8;text-decoration:none;font-size:0.8em;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;transition:0.2s}.mode span{font-size:1.05em}.mode:hover{border-color:rgba(34,211,238,0.4);background:rgba(34,211,238,0.08)}
+.sec-t{max-width:1200px;margin:44px auto 0;padding:0 20px;font-size:0.75em;letter-spacing:0.3em;text-transform:uppercase;color:#22d3ee}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:18px;max-width:1200px;margin:18px auto;padding:0 20px}.card{background:#101014;border:1px solid #27272a;border-radius:16px;padding:22px;transition:all 0.25s;text-decoration:none;color:inherit;display:block}.card:hover{border-color:#22d3ee;box-shadow:0 0 30px rgba(34,211,238,0.12);transform:translateY(-2px)}.card h2{font-size:1.2em;margin-bottom:6px}.card p{color:#a1a1aa;font-size:0.86em;line-height:1.55}.card .stat{font-size:1.8em;font-weight:800;background:linear-gradient(135deg,#22d3ee,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent}.card .label{color:#71717a;font-size:0.76em}
+.svc-row{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;background:#101014;border:1px solid #27272a;border-radius:12px;margin-bottom:8px}.svc-name{font-weight:600;font-size:0.92em}.svc-detail{color:#71717a;font-size:0.76em;margin-top:2px}.svc-status{padding:4px 12px;border-radius:20px;font-size:0.72em;font-weight:700;white-space:nowrap}.on{background:rgba(74,222,128,0.12);color:#4ade80}.warn{background:rgba(250,204,21,0.12);color:#facc15}.off{background:rgba(248,113,113,0.12);color:#f87171}
+.services{max-width:1200px;margin:18px auto;padding:0 20px}.repog{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px;max-width:1200px;margin:18px auto;padding:0 20px}.repo{display:flex;gap:12px;align-items:center;background:#101014;border:1px solid #27272a;border-radius:12px;padding:14px 16px;color:inherit;text-decoration:none;font-size:0.86em;transition:0.2s}.repo small{color:#71717a}.repo:hover{border-color:#e879f9}.repo .ric{font-size:1.35em}
+.domain-grid{max-width:1200px;margin:18px auto;padding:0 20px}.domain-card{display:inline-block;padding:9px 16px;background:#101014;border:1px solid #27272a;border-radius:10px;margin:4px;color:#71717a;text-decoration:none;font-size:0.8em;font-family:monospace;transition:0.2s}.domain-card:hover{border-color:#22d3ee;color:#22d3ee}footer{text-align:center;padding:36px;color:#52525b;font-size:0.78em}
 </style></head><body>
-<nav><a href="/">🏠 Hub</a><a href="/vm">🖥️ VM</a><a href="/monitor">📊 Monitor</a><a href="/ai">🧠 AI</a><a href="/chat">💬 Chat</a><a href="/status">📈 Status</a></nav>
-<div class="hero"><h1>RocSpace Hub</h1><p>Satu situs untuk semuanya · v19.0.0 "Hub Tunggal" · tanpa mirror</p>
-<span class="tag">✅ hub.roadfx.biz.id</span><span class="tag">⚡ API: api.roadfx.biz.id</span><span class="tag">🚫 Anti-mirror</span><span class="tag">🔀 Host lama → 301</span><span class="tag">🧠 antigravity.ai.studio</span></div>
+<nav><a href="/">🏠 Hub</a><a href="/vm">🖥️ VM</a><a href="/monitor">📊 Monitor</a><a href="/ai">🧠 AI</a><a href="/chat">💬 Chat</a><a href="/links">🗂️ Directory</a><a href="/status">📈 Status</a></nav>
+<div class="hero"><span class="kick">Command Center · v19.1.0</span>
+<h1>RocSpace Hub</h1><p>Satu situs for semuanya · tanpa mirror · semua kolaborasi tersinkron di sini</p>
+<span class="tag">✅ hub.roadfx.biz.id</span><span class="tag hot">⚡ API: api.roadfx.biz.id</span><span class="tag">🚫 Anti-mirror</span><span class="tag">🔀 Host lama → 301</span>
+<div class="modes">${modes}</div></div>
+<div class="sec-t">// Layanan</div>
 <div class="grid">${cards}</div>
-<div class="services"><h2 style="margin-bottom:16px;font-size:1.3em">📡 Endpoint & Label</h2>
-<div class="svc-row"><div><div class="svc-name">API kanonik — api.roadfx.biz.id</div><div class="svc-detail">Tetap nama resmi untuk mesin/integrasi (sesuai keputusan)</div></div><span class="svc-status on">● Active</span></div>
-<div class="svc-row"><div><div class="svc-name">/health — bridge HTTPS → VM Oracle</div><div class="svc-detail">Kini host-agnostic: jalan di hub & host lama</div></div><span class="svc-status on">● JSON</span></div>
-<div class="svc-row"><div><div class="svc-name">Label panel</div><div class="svc-detail">webvirtcloud.ai.studio · antigravity.ai.studio · rocspace.ai.studio</div></div><span class="svc-status warn">● Label</span></div>
+<div class="sec-t">// Sinkron · live probe</div>
+<div class="services">${probes}</div>
+<div class="sec-t">// Integrasi & kolaborasi</div>
+<div class="services">
+<div class="svc-row"><div><div class="svc-name">API kanonik — api.roadfx.biz.id</div><div class="svc-detail">Satu-satunya nama resmi untuk mesin/integrasi (keputusan final)</div></div><span class="svc-status on">● Active</span></div>
+<div class="svc-row"><div><div class="svc-name">/health — bridge HTTPS → VM Oracle</div><div class="svc-detail">Host-agnostic · raw TCP socket (CF 1003 workaround)</div></div><span class="svc-status on">● JSON</span></div>
+<div class="svc-row"><div><div class="svc-name">Label kolaborasi</div><div class="svc-detail">rocspace.ai.studio · webvirtcloud.ai.studio · antigravity.ai.studio</div></div><span class="svc-status warn">● Label</span></div>
+<div class="svc-row"><div><div class="svc-name">AI Studio applet (privat)</div><div class="svc-detail"><a href="${AI_STUDIO.APP}" style="color:#67e8f9">rocspace.ai.studio → applet Google AI Studio</a> · login Google pemilik</div></div><span class="svc-status on">● Link</span></div>
+<div class="svc-row"><div><div class="svc-name">Tailscale tailnet</div><div class="svc-detail">roc-vm 100.93.139.73 · rocfx (HP) · CPH1823</div></div><span class="svc-status on">● Mesh</span></div>
+<div class="svc-row"><div><div class="svc-name">Firebase + GCP trial $300</div><div class="svc-detail">planning-with-ai-36675 · budget alert aktif</div></div><span class="svc-status warn">● Trial</span></div>
 </div>
-<div class="domain-grid"><h2 style="margin-bottom:16px;font-size:1.3em">↪️ Host lama (otomatis 301 ke hub)</h2>
-${oldHosts}</div>
-<footer>RocSpace by RoadFX AI · 2026 · v19.0.0 · satu situs kanonik · <a href="https://github.com/ivansslo/rocspace" style="color:#60a5fa">GitHub</a></footer>
+<div class="sec-t">// Repositori sumber (anti-mirror: tautan, bukan duplikat)</div>
+<div class="repog">${repos}</div>
+<div class="sec-t">// Host lama (otomatis 301 ke hub)</div>
+<div class="domain-grid">${oldHosts}</div>
+<footer>RocSpace by RoadFX AI · 2026 · v19.1.0 Command Center · satu situs kanonik · <a href="https://github.com/ivansslo/rocspace" style="color:#67e8f9">GitHub</a></footer>
+<script>
+document.querySelectorAll('[data-probe]').forEach(async el=>{
+  const t0=performance.now();
+  try{
+    const r=await fetch(el.dataset.probe,{cache:'no-store'});
+    const ms=Math.round(performance.now()-t0);
+    if(r.ok){el.textContent='● online · '+ms+'ms';el.className='svc-status on'}
+    else{el.textContent='● HTTP '+r.status;el.className='svc-status off'}
+  }catch{el.textContent='● unreachable';el.className='svc-status off'}
+});
+</script>
+</body></html>`;
+}
+
+// ─── v19.1: Directory lokal — pengganti /links gateway yang 522 ──
+function renderLinks(): string {
+  const sec = (t: string, rows: string) => `<div class="sec-t">${t}</div><div class="services">${rows}</div>`;
+  const row = (n: string, d: string, href: string) => `<a class="svc-row" href="${href}" style="text-decoration:none;color:inherit"><div><div class="svc-name">${n}</div><div class="svc-detail">${d}</div></div><span class="svc-status on">↗</span></a>`;
+  return `<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="canonical" href="https://hub.roadfx.biz.id/links"><title>ROC Directory — Semua Koneksi</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#09090b;color:#e4e4e7;min-height:100vh}
+.hero{text-align:center;padding:56px 20px 36px;background:radial-gradient(circle_at_top,rgba(34,211,238,0.14),transparent 42%),#09090b}.hero h1{font-size:2.2em;font-weight:900;background:linear-gradient(135deg,#22d3ee,#e879f9);-webkit-background-clip:text;-webkit-text-fill-color:transparent}.hero p{color:#a1a1aa;margin-top:10px}
+.sec-t{max-width:900px;margin:36px auto 10px;padding:0 20px;font-size:0.75em;letter-spacing:0.3em;text-transform:uppercase;color:#22d3ee}
+.services{max-width:900px;margin:0 auto;padding:0 20px}.svc-row{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;background:#101014;border:1px solid #27272a;border-radius:12px;margin-bottom:8px;transition:0.2s}.svc-row:hover{border-color:#22d3ee}.svc-name{font-weight:600;font-size:0.92em}.svc-detail{color:#71717a;font-size:0.76em;margin-top:2px}.svc-status{padding:4px 12px;border-radius:20px;font-size:0.72em;font-weight:700;background:rgba(34,211,238,0.1);color:#67e8f9}
+a{text-decoration:none}footer{text-align:center;padding:36px;color:#52525b;font-size:0.78em}
+</style></head><body>
+<div class="hero"><h1>🗂️ ROC Directory</h1><p>Semua koneksi & integrasi · lokal di worker · v19.1.0 (pengganti /links gateway yang 522)</p></div>
+${sec('// Layanan inti (hub)', row('🖥️ VM Console','WebVirtCloud + Firebase + noVNC','/vm') + row('📊 Monitor','Uptime Kuma via Nginx VM','/monitor') + row('🧠 AI Gateway','16 models · 5 providers','/ai') + row('🔴 Chat Live','Clerk auth penuh','/chat-live') + row('💬 Quick Chat','tanpa login','/chat') + row('📈 Status','status page lokal','/status') + row('🎛️ Dashboard','panel infrastruktur gateway','/dashboard') + row('🎨 AI Studio','applet privat (login Google)',AI_STUDIO.APP))}
+${sec('// API & endpoint (mesin)', row('⚡ api.roadfx.biz.id','API kanonik — /v1/models dll','https://api.roadfx.biz.id/v1/models') + row('🏥 /health','bridge JSON ke VM','/health') + row('📡 gateway — hermes-cloudflare','workers.dev internal · anti-loop','https://hermes-cloudflare.certveis.workers.dev'))}
+${sec('// Kolaborasi & label', row('🌐 Tailscale tailnet','roc-vm · rocfx · CPH1823','https://login.tailscale.com/admin/machines') + row('🔥 Firebase planning-with-ai-36675','Firestore + Hosting','https://console.firebase.google.com') + row('☁️ GCP trial $300','budget alert 50/90/100%','https://console.cloud.google.com/billing') + row('🛠️ OCI Console','Run Command → SSH VM','https://cloud.oracle.com'))}
+${sec('// Repositori sumber', row('ivansslo/rocspace','hub + shared (repo ini)','https://github.com/ivansslo/rocspace') + row('ivansslo/Solace-Hermes-Project','sumber gateway','https://github.com/ivansslo/Solace-Hermes-Project') + row('ivansslo/roadfx-ai-stack','stack Cloud Run','https://github.com/ivansslo/roadfx-ai-stack') + row('ivansslo/ai-vitality','Cloud Run down billing 🔴','https://github.com/ivansslo/ai-vitality') + row('ivansslo/roc-containers','Termux v1.6.0','https://github.com/ivansslo/roc-containers') + row('ivansslo/roc-agentsroute','hermes v5.13.1','https://github.com/ivansslo/roc-agentsroute') + row('ivansslo/Rofwin','APK v1.0.1','https://github.com/ivansslo/Rofwin'))}
+${sec('// Eksternal', row('🧠 Termux di HP (roc-menu)','Antigravity udocker localhost:5905','/vm') + row('🏷️ Labels','rocspace.ai.studio · webvirtcloud.ai.studio · antigravity.ai.studio','/'))}
+<footer>RocSpace by RoadFX AI · 2026 · <a href="/" style="color:#67e8f9">← kembali ke Hub</a></footer>
 </body></html>`;
 }
 
